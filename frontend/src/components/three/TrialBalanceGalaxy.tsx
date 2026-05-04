@@ -35,10 +35,15 @@ function GalaxyNode({ item, position, color, size }: GalaxyNodeProps) {
     <group position={position}>
       <mesh
         ref={meshRef}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerOver={() => {
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = 'auto';
+        }}
         onClick={() => router.push(`/ledgers/${item.ledgerId}`)}
-        cursor="pointer"
       >
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial
