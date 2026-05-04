@@ -211,7 +211,7 @@ export default function VoucherDetailPage() {
         </div>
 
         {/* Tax Summary Table (India Compliance) */}
-        {voucher.entries.some(e => (Number(e.cgst_amount || 0) > 0 || Number(e.sgst_amount || 0) > 0 || Number(e.igst_amount || 0) > 0)) && (
+        {voucher.entries.some(e => (Number(e.cgstAmount || 0) > 0 || Number(e.sgstAmount || 0) > 0 || Number(e.igstAmount || 0) > 0)) && (
           <div className="mt-8 pt-8 border-t border-border/30 print:border-black">
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 print:text-black print:text-sm">Tax Summary (GST)</h3>
             <table className="w-full text-sm">
@@ -223,9 +223,9 @@ export default function VoucherDetailPage() {
               </thead>
               <tbody className="divide-y divide-border/10 print:divide-black">
                 {(() => {
-                  const cgst = voucher.entries.reduce((s, e) => s + Number(e.cgst_amount || 0), 0);
-                  const sgst = voucher.entries.reduce((s, e) => s + Number(e.sgst_amount || 0), 0);
-                  const igst = voucher.entries.reduce((s, e) => s + Number(e.igst_amount || 0), 0);
+                  const cgst = voucher.entries.reduce((s, e) => s + Number(e.cgstAmount || 0), 0);
+                  const sgst = voucher.entries.reduce((s, e) => s + Number(e.sgstAmount || 0), 0);
+                  const igst = voucher.entries.reduce((s, e) => s + Number(e.igstAmount || 0), 0);
                   return (
                     <>
                       {cgst > 0 && (
