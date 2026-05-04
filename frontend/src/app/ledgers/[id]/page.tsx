@@ -1,5 +1,6 @@
 'use client';
 
+import React, { Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -17,7 +18,7 @@ import Link from 'next/link';
 import { useTenancy } from '@/hooks/useTenancy';
 import { Ledger, Voucher, ApiResponse } from '@/types';
 
-export default function LedgerStatementPage() {
+function LedgerStatementContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const id = params.id as string;
@@ -47,12 +48,12 @@ export default function LedgerStatementPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="animate-spin text-violet-500 mb-4" size={40} />
-        <p className="text-slate-400 animate-pulse">Reconstructing ledger historical data...</p>
+        <p className="text-slate-400 animate-pulse font-medium uppercase tracking-widest text-[10px]">Reconstructing ledger historical data...</p>
       </div>
     );
   }
 
-  if (!ledger) return <div>Ledger not found</div>;
+  if (!ledger) return <div className="text-center p-20 text-slate-500 font-bold uppercase tracking-widest">Ledger record not found in neural archives</div>;
 
   // 3. Process Statement
   const entries: any[] = [];
@@ -118,7 +119,7 @@ export default function LedgerStatementPage() {
               {ledger.name}
             </h1>
             <p className="text-sm text-slate-500 font-medium">
-              Statement from <span className="text-violet-400">{from}</span> to <span className="text-violet-400">{to}</span>
+              Statement from <span className="text-violet-400 font-mono">{from}</span> to <span className="text-violet-400 font-mono">{to}</span>
             </p>
           </div>
         </div>
@@ -174,11 +175,11 @@ export default function LedgerStatementPage() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {/* Opening Balance Row */}
-              <tr className="bg-white/[0.02] italic">
+              <tr className="bg-white/[0.02] italic text-slate-400 font-medium">
                 <td className="px-6 py-4 text-sm font-mono text-slate-500">{from}</td>
-                <td className="px-6 py-4 font-bold text-slate-400">Opening Balance</td>
+                <td className="px-6 py-4">Opening Balance</td>
                 <td colSpan={4}></td>
-                <td className="px-6 py-4 text-right font-mono font-bold text-slate-300">
+                <td className="px-6 py-4 text-right font-mono font-bold">
                   {formatCurrency(ledger.openingBalance)} {ledger.openingBalanceType}
                 </td>
               </tr>
@@ -192,15 +193,15 @@ export default function LedgerStatementPage() {
                   <tr key={row.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-4 text-sm font-mono text-slate-400">{row.date}</td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-medium">{row.narration || '—'}</p>
+                      <p className="text-sm font-medium">{row.narration || '\u2014'}</p>
                     </td>
                     <td className="px-6 py-4 text-xs font-bold text-violet-400 uppercase tracking-tighter">{row.vchType}</td>
                     <td className="px-6 py-4 text-sm font-mono text-slate-400">{row.vchNo}</td>
                     <td className="px-6 py-4 text-right font-mono text-red-400">
-                      {row.isDebit ? formatCurrency(row.amount) : '—'}
+                      {row.isDebit ? formatCurrency(row.amount) : '\u2014'}
                     </td>
                     <td className="px-6 py-4 text-right font-mono text-emerald-400">
-                      {!row.isDebit ? formatCurrency(row.amount) : '—'}
+                      {!row.isDebit ? formatCurrency(row.amount) : '\u2014'}
                     </td>
                     <td className="px-6 py-4 text-right font-mono font-bold text-white">
                       {formatCurrency(row.displayBalance)} <span className="text-[10px] text-slate-500">{row.displayBalanceType}</span>
@@ -211,7 +212,7 @@ export default function LedgerStatementPage() {
             </tbody>
             <tfoot>
               <tr className="bg-violet-600/5 font-bold border-t border-white/10">
-                <td colSpan={4} className="px-6 py-6 text-sm">Grand Total / Closing Balance</td>
+                <td colSpan={4} className="px-6 py-6 text-sm uppercase tracking-widest font-black">Grand Total / Closing Balance</td>
                 <td className="px-6 py-6 text-right font-mono text-red-400">{formatCurrency(totalDr)}</td>
                 <td className="px-6 py-6 text-right font-mono text-emerald-400">{formatCurrency(totalCr)}</td>
                 <td className="px-6 py-6 text-right font-mono text-violet-400 underline decoration-double">
@@ -223,5 +224,18 @@ export default function LedgerStatementPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LedgerStatementPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-violet-500 mb-4" size={40} />
+        <p className="text-slate-400 animate-pulse font-medium uppercase tracking-widest text-[10px]">Initializing quantum ledger stream...</p>
+      </div>
+    }>
+      <LedgerStatementContent />
+    </Suspense>
   );
 }
