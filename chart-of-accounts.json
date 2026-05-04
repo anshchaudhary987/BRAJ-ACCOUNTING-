@@ -1,0 +1,196 @@
+{
+  "groups": [
+    {
+      "id": "primary",
+      "name": "Primary",
+      "parent": null,
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": "Top-most group; all other groups hang under this."
+    },
+    {
+      "id": "capital-account",
+      "name": "Capital Account",
+      "parent": "primary",
+      "type": "Liability",
+      "isGSTRelevant": false,
+      "remarks": "Proprietor/Partner capital and drawings."
+    },
+    {
+      "id": "reserves-and-surplus",
+      "name": "Reserves & Surplus",
+      "parent": "primary",
+      "type": "Liability",
+      "isGSTRelevant": false,
+      "remarks": "Retained earnings, general reserve, etc."
+    },
+    {
+      "id": "loans-liabilities",
+      "name": "Loans (Liability)",
+      "parent": "primary",
+      "type": "Liability",
+      "isGSTRelevant": false,
+      "remarks": "Term loans, secured/unsecured loans."
+    },
+    {
+      "id": "current-liabilities",
+      "name": "Current Liabilities",
+      "parent": "primary",
+      "type": "Liability",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "duties-and-taxes",
+      "name": "Duties & Taxes",
+      "parent": "current-liabilities",
+      "type": "Liability",
+      "isGSTRelevant": true,
+      "remarks": "All GST, TDS, TCS payables."
+    },
+    {
+      "id": "sundry-creditors",
+      "name": "Sundry Creditors",
+      "parent": "current-liabilities",
+      "type": "Liability",
+      "isGSTRelevant": true,
+      "remarks": "Trade payables (purchases on credit)."
+    },
+    {
+      "id": "provisions",
+      "name": "Provisions",
+      "parent": "current-liabilities",
+      "type": "Liability",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "fixed-assets",
+      "name": "Fixed Assets",
+      "parent": "primary",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": "Land, building, machinery, computers, etc."
+    },
+    {
+      "id": "investments",
+      "name": "Investments",
+      "parent": "primary",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": "Shares, mutual funds, FDs, etc."
+    },
+    {
+      "id": "current-assets",
+      "name": "Current Assets",
+      "parent": "primary",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "bank-accounts",
+      "name": "Bank Accounts",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "cash-in-hand",
+      "name": "Cash-in-Hand",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "deposits-asset",
+      "name": "Deposits (Asset)",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": ""
+    },
+    {
+      "id": "loans-and-advances",
+      "name": "Loans & Advances (Asset)",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": "Employee advances, prepaid expenses, etc."
+    },
+    {
+      "id": "sundry-debtors",
+      "name": "Sundry Debtors",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": true,
+      "remarks": "Trade receivables (sales on credit)."
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory",
+      "parent": "current-assets",
+      "type": "Asset",
+      "isGSTRelevant": true,
+      "remarks": "Stock-in-hand."
+    },
+    {
+      "id": "branch-divisions",
+      "name": "Branch / Divisions",
+      "parent": "primary",
+      "type": "Asset",
+      "isGSTRelevant": false,
+      "remarks": "For multi-location accounting."
+    },
+    {
+      "id": "sales-accounts",
+      "name": "Sales Accounts",
+      "parent": "primary",
+      "type": "Income",
+      "isGSTRelevant": true,
+      "remarks": "All revenue from sales of goods/services."
+    },
+    {
+      "id": "purchase-accounts",
+      "name": "Purchase Accounts",
+      "parent": "primary",
+      "type": "Expense",
+      "isGSTRelevant": true,
+      "remarks": "All direct purchases of goods."
+    },
+    {
+      "id": "direct-incomes",
+      "name": "Direct Incomes",
+      "parent": "primary",
+      "type": "Income",
+      "isGSTRelevant": false,
+      "remarks": "Job work income, scrap sales, etc."
+    },
+    {
+      "id": "direct-expenses",
+      "name": "Direct Expenses",
+      "parent": "primary",
+      "type": "Expense",
+      "isGSTRelevant": false,
+      "remarks": "Freight, loading, factory expenses."
+    },
+    {
+      "id": "indirect-incomes",
+      "name": "Indirect Incomes",
+      "parent": "primary",
+      "type": "Income",
+      "isGSTRelevant": false,
+      "remarks": "Interest received, discount received, etc."
+    },
+    {
+      "id": "indirect-expenses",
+      "name": "Indirect Expenses",
+      "parent": "primary",
+      "type": "Expense",
+      "isGSTRelevant": false,
+      "remarks": "Rent, admin salaries, office expenses, etc."
+    }
+  ]
+}
