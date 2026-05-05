@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 import pool from './config/database.js';
 
 const groups = [
@@ -148,11 +149,12 @@ async function seed() {
 
     // ─── Seed System Admin User ───
     const adminUserId = '00000000-0000-0000-0000-000000000000';
+    const adminPasswordHash = await bcrypt.hash('admin123', 10);
     await pool.query(
-      'INSERT INTO users (id, name, email, is_active) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING',
-      [adminUserId, 'System Admin', 'admin@braj.com', true]
+      'INSERT INTO users (id, name, email, password_hash, is_active) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING',
+      [adminUserId, 'System Admin', 'admin@braj.com', adminPasswordHash, true]
     );
-    console.log('System Admin user seeded successfully');
+    console.log('System Admin user seeded successfully (Password: admin123)');
 
     // ─── Link Admin to all existing companies ───
     const adminRoleResult = await pool.query("SELECT id FROM roles WHERE name = 'Admin'");
