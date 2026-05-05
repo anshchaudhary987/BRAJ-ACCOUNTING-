@@ -3,7 +3,11 @@ const { Pool } = pg;
 import Database from 'better-sqlite3';
 import dotenv from 'dotenv';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -70,7 +74,7 @@ export async function initializeDatabase() {
   if (dbType === 'postgres') {
     const client = await pool.connect();
     try {
-      const schemaPath = join(process.cwd(), 'src', 'db', 'schema.sql');
+      const schemaPath = join(__dirname, '..', 'db', 'schema.sql');
       const schemaSql = readFileSync(schemaPath, 'utf8');
       const statements = schemaSql.split(';').filter((stmt: string) => stmt.trim());
       
@@ -83,7 +87,7 @@ export async function initializeDatabase() {
       client.release();
     }
   } else {
-    const schemaPath = join(process.cwd(), 'src', 'db', 'schema.sql');
+    const schemaPath = join(__dirname, '..', 'db', 'schema.sql');
     let schemaSql = readFileSync(schemaPath, 'utf8');
     
     schemaSql = schemaSql
