@@ -61,9 +61,9 @@ function LedgerStatementContent() {
         if (e.ledgerId === id) {
           entries.push({
             date: v.date,
-            vchNo: v.vchNo,
-            vchType: v.vchType,
-            narration: v.narration,
+          vchNo: v.voucherNumber,
+            vchType: v.voucherType,
+                        narration: v.narration,
             isDebit: e.isDebit,
             amount: Number(e.amount),
             id: e.id,
