@@ -53,16 +53,15 @@ export class VoucherController {
         let entryWithTax = { ...entry };
 
         // GST Logic (for Sales/Purchase)
-        if (['Sales', 'Purchase'].includes(voucherType) && ledger.hsnCodeId) {
+        if (['Sales', 'Purchase'].includes(voucherType) && ledger.hsn_code_id) {
           const gstResult = gstEngine.calculate({
             voucherType: voucherType as any,
-            companyStateId: company.stateId,
+            companyStateId: company.state_id,
             companyGSTIN: company.gstin,
-            companyRegistrationType: company.gstRegistrationType || 'Regular',
-            partyStateId: ledger.stateId || company.stateId, // Default to intra-state if no state on ledger
-            partyRegistrationType: ledger.gstin ? 'Regular' : 'Unregistered', // Simplified inference
+            companyRegistrationType: company.gst_registration_type || 'Regular',
+            partyStateId: ledger.state_id || company.state_id, // Default to intra-state if no state on ledger
             taxableAmount: entry.amount,
-            taxRate: (ledger as any).gstRate || 18,
+            taxRate: (ledger as any).gst_rate || 18,
             isReverseCharge: false
           });
 
@@ -81,8 +80,8 @@ export class VoucherController {
         }
 
         // TDS Logic (for Payments/Journal)
-        if (['Payment', 'Journal'].includes(voucherType) && ledger.tdsApplicable && ledger.tdsNatureCode) {
-          const tdsNature = await TdsNatureRepository.findByCode(client, ledger.tdsNatureCode);
+        if (['Payment', 'Journal'].includes(voucherType) && ledger.tds_applicable && ledger.tds_nature_code) {
+          const tdsNature = await TdsNatureRepository.findByCode(client, ledger.tds_nature_code);
           if (tdsNature) {
             const tdsResult = tdsEngine.calculate({
               voucherType: voucherType as any,

@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Braj Accounting - Spatial Ledger Matrix
+
+Braj Accounting is an enterprise-grade, 3D-immersive accounting platform designed to redefine financial visualization. Built with Next.js 16, React Three Fiber, and a high-performance spatial UI, it offers a professional-grade alternative to traditional accounting software.
+
+## Core Pillars
+- **Spatial UI**: Immersive 3D data visualizations and physics-based interactions.
+- **Precision Ledger**: Real-time double-entry accounting with statutory compliance.
+- **Multi-Tenant Architecture**: Robust company-wise data isolation and role-based access.
+- **Keyboard-First**: Optimized for professional accounting workflows with deep hotkey support.
 
 ## Getting Started
 
-First, run the development server:
-
+### 1. Environment Configuration
+Create a `.env.local` file based on `.env.example`:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Development Execution
+```bash
+npm install
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) to access the forge.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+This project is optimized for **Vercel**. Please refer to the [Vercel Deployment Guide](./VERCEL_DEPLOYMENT.md) for detailed instructions on root directory settings and environment variables.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS 4.
+- **Graphics**: React Three Fiber, Three.js, Framer Motion.
+- **State**: Zustand (Persistence), TanStack Query.
+- **Icons**: Lucide React.

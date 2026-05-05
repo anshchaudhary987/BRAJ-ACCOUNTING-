@@ -32,10 +32,6 @@ export const inviteUser = async (req: Request, res: Response) => {
       user = await UserRepository.createUser(pool, name, email);
     }
 
-    if (!user) {
-      return res.status(500).json({ error: 'Failed to create or find user' });
-    }
-
     await UserRepository.addUserToCompany(pool, user.id, companyId, roleId);
     res.json({ message: 'User added to company', user });
   } catch (error: any) {
@@ -46,7 +42,7 @@ export const inviteUser = async (req: Request, res: Response) => {
 export const removeUser = async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
-    const userId = req.params.userId as string;
+    const { userId } = req.params;
     await UserRepository.removeUserFromCompany(pool, userId, companyId);
     res.json({ message: 'User removed from company' });
   } catch (error: any) {

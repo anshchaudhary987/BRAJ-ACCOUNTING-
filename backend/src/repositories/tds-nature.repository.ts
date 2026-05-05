@@ -4,12 +4,13 @@ import type { ITdsNature } from '../models/tds-engine.model.js';
 function mapTdsNatureRow(row: any): ITdsNature {
   if (!row) return row;
   return {
+    id: row.id,
     code: row.code,
     description: row.description,
     section: row.section,
     rateIndividual: parseFloat(row.rate_individual || '0'),
-    rateOthers: parseFloat(row.rate_company || '0'),
-    thresholdLimit: parseFloat(row.threshold || '0')
+    rateCompany: parseFloat(row.rate_company || '0'),
+    threshold: parseFloat(row.threshold || '0')
   };
 }
 
