@@ -15,7 +15,8 @@ let dbType: 'postgres' | 'sqlite' = 'postgres';
 let pool: any = null;
 let sqlite: any = null;
 
-const connectionString = process.env.DATABASE_URL;
+// Vercel Postgres provides POSTGRES_URL or DATABASE_URL
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 if (!connectionString || !connectionString.startsWith('postgresql')) {
   console.log('PostgreSQL not configured or URL invalid. Falling back to SQLite.');
@@ -25,6 +26,14 @@ if (!connectionString || !connectionString.startsWith('postgresql')) {
 if (dbType === 'postgres') {
   pool = new Pool({
     connectionString: connectionString,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+
+  // Handle pool errors to prevent process crashes in serverless
+  pool.on('error', (err: any) => {
+    console.error('Unexpected error on idle client', err);
   });
 } else {
   const dbPath = join(process.cwd(), 'braj_accounting.db');
