@@ -1,24 +1,57 @@
 import type { DbClient, DbQueryResult } from '../types/database.js';
+import { mapKeysToSnakeCase } from '../utils/mapper.js';
+
 
 // Interface for ledger row (matches ledgers table)
 interface LedgerRow {
   id: string;
-  company_id: string;
+  companyId: string;
   name: string;
-  group_id: string;
+  groupId: string;
   gstin?: string | null;
-  hsn_sac?: string | null;
-  state?: string | null;
-  opening_balance: number; // Assuming numeric
-  opening_balance_type: 'Dr' | 'Cr';
-  tds_applicable: boolean;
-  tds_nature?: string | null;
-  bank_account_number?: string | null;
-  bank_ifsc?: string | null;
-  bank_branch?: string | null;
-  is_active: boolean;
-  created_at?: Date;
-  updated_at?: Date;
+  hsnCodeId?: string | null;
+  stateId?: string | null;
+  openingBalance: number; 
+  openingBalanceType: 'Dr' | 'Cr';
+  tdsApplicable: boolean;
+  tdsNatureCode?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfsc?: string | null;
+  bankBranch?: string | null;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  stateCode?: string;
+  stateName?: string;
+  hsnCode?: string;
+  gstRate?: number;
+}
+
+function mapRow(row: any): LedgerRow {
+  if (!row) return row;
+  return {
+    id: row.id,
+    companyId: row.company_id,
+    name: row.name,
+    groupId: row.group_id,
+    gstin: row.gstin,
+    hsnCodeId: row.hsn_code_id,
+    stateId: row.state_id,
+    openingBalance: parseFloat(row.opening_balance || '0'),
+    openingBalanceType: row.opening_balance_type,
+    tdsApplicable: row.tds_applicable,
+    tdsNatureCode: row.tds_nature_code,
+    bankAccountNumber: row.bank_account_number,
+    bankIfsc: row.bank_ifsc,
+    bankBranch: row.bank_branch,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    stateCode: row.state_code,
+    stateName: row.state_name,
+    hsnCode: row.hsn_code,
+    gstRate: row.gst_rate ? parseFloat(row.gst_rate) : undefined
+  };
 }
 
 /**
@@ -27,10 +60,6 @@ interface LedgerRow {
 export class LedgerRepository {
   /**
    * Create a new ledger.
-   * @param client - Database client
-   * @param companyId - Company ID for multi-tenancy
-   * @param ledgerData - Ledger data
-   * @returns Created ledger object
    */
   static async create(
     client: DbClient,
@@ -39,12 +68,12 @@ export class LedgerRepository {
       name: string;
       groupId: string;
       gstin?: string | null;
-      hsnSac?: string | null;
-      state?: string | null;
+      hsnCodeId?: string | null;
+      stateId?: string | null;
       openingBalance: number;
       openingBalanceType: 'Dr' | 'Cr';
       tdsApplicable: boolean;
-      tdsNature?: string | null;
+      tdsNatureCode?: string | null;
       bankAccountNumber?: string | null;
       bankIfsc?: string | null;
       bankBranch?: string | null;
@@ -52,8 +81,8 @@ export class LedgerRepository {
   ): Promise<LedgerRow> {
     const query = `
       INSERT INTO ledgers (
-        company_id, name, group_id, gstin, hsn_sac, state,
-        opening_balance, opening_balance_type, tds_applicable, tds_nature,
+        company_id, name, group_id, gstin, hsn_code_id, state_id,
+        opening_balance, opening_balance_type, tds_applicable, tds_nature_code,
         bank_account_number, bank_ifsc, bank_branch
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
@@ -64,22 +93,22 @@ export class LedgerRepository {
       ledgerData.name,
       ledgerData.groupId,
       ledgerData.gstin ?? null,
-      ledgerData.hsnSac ?? null,
-      ledgerData.state ?? null,
+      ledgerData.hsnCodeId ?? null,
+      ledgerData.stateId ?? null,
       ledgerData.openingBalance,
       ledgerData.openingBalanceType,
       ledgerData.tdsApplicable,
-      ledgerData.tdsNature ?? null,
+      ledgerData.tdsNatureCode ?? null,
       ledgerData.bankAccountNumber ?? null,
       ledgerData.bankIfsc ?? null,
       ledgerData.bankBranch ?? null
     ];
-    const result: DbQueryResult<LedgerRow> = await client.query(query, values);
+    const result: DbQueryResult<any> = await client.query(query, values);
     const ledger = result.rows[0];
     if (!ledger) {
       throw new Error('Failed to create ledger');
     }
-    return ledger;
+    return mapRow(ledger);
   }
 
   static async findByCompany(
@@ -89,12 +118,12 @@ export class LedgerRepository {
   ): Promise<LedgerRow[]> {
     if (groupId) {
       const query = 'SELECT * FROM ledgers WHERE company_id = $1 AND group_id = $2 AND is_active = true';
-      const result: DbQueryResult<LedgerRow> = await client.query(query, [companyId, groupId]);
-      return result.rows;
+      const result: DbQueryResult<any> = await client.query(query, [companyId, groupId]);
+      return result.rows.map(mapRow);
     } else {
       const query = 'SELECT * FROM ledgers WHERE company_id = $1 AND is_active = true';
-      const result: DbQueryResult<LedgerRow> = await client.query(query, [companyId]);
-      return result.rows;
+      const result: DbQueryResult<any> = await client.query(query, [companyId]);
+      return result.rows.map(mapRow);
     }
   }
 
@@ -103,9 +132,15 @@ export class LedgerRepository {
     companyId: string,
     ledgerId: string
   ): Promise<LedgerRow | null> {
-    const query = 'SELECT * FROM ledgers WHERE id = $1 AND company_id = $2 AND is_active = true';
-    const result: DbQueryResult<LedgerRow> = await client.query(query, [ledgerId, companyId]);
-    return result.rows[0] ?? null;
+    const query = `
+      SELECT l.*, s.code as state_code, s.name as state_name, h.code as hsn_code, h.gst_rate
+      FROM ledgers l
+      LEFT JOIN states s ON l.state_id = s.id
+      LEFT JOIN hsn_codes h ON l.hsn_code_id = h.id
+      WHERE l.id = $1 AND l.company_id = $2 AND l.is_active = true
+    `;
+    const result: DbQueryResult<any> = await client.query(query, [ledgerId, companyId]);
+    return result.rows[0] ? mapRow(result.rows[0]) : null;
   }
 
   static async update(
@@ -114,7 +149,8 @@ export class LedgerRepository {
     ledgerId: string,
     data: Partial<Omit<LedgerRow, 'id' | 'company_id' | 'created_at' | 'updated_at' | 'is_active'>>
   ): Promise<LedgerRow> {
-    const fields = Object.keys(data);
+    const snakeData = mapKeysToSnakeCase(data);
+    const fields = Object.keys(snakeData);
     if (fields.length === 0) {
       throw new Error('No data provided for update');
     }
@@ -122,7 +158,7 @@ export class LedgerRepository {
     const setClause = fields
       .map((field, index) => `${field} = $${index + 3}`)
       .join(', ');
-    const values = [companyId, ledgerId, ...fields.map((field) => (data as any)[field])];
+    const values = [companyId, ledgerId, ...fields.map((field) => snakeData[field])];
 
     const query = `
       UPDATE ledgers
@@ -131,12 +167,13 @@ export class LedgerRepository {
       RETURNING *
     `;
 
-    const result: DbQueryResult<LedgerRow> = await client.query(query, values);
+
+    const result: DbQueryResult<any> = await client.query(query, values);
     const ledger = result.rows[0];
     if (!ledger) {
       throw new Error('Failed to update ledger');
     }
-    return ledger;
+    return mapRow(ledger);
   }
 
   static async softDelete(
@@ -190,5 +227,42 @@ export class LedgerRepository {
     const balance = debitTotal - creditTotal;
 
     return { debitTotal, creditTotal, balance };
+  }
+
+  static async getAllBalances(
+    client: DbClient,
+    companyId: string
+  ): Promise<Array<{ ledgerId: string; groupId: string; debitTotal: number; creditTotal: number; balance: number }>> {
+    const query = `
+      SELECT
+        l.id AS ledger_id,
+        l.group_id,
+        COALESCE(SUM(CASE WHEN ve.is_debit THEN ve.amount ELSE 0 END), 0) AS debit_total,
+        COALESCE(SUM(CASE WHEN NOT ve.is_debit THEN ve.amount ELSE 0 END), 0) AS credit_total
+      FROM ledgers l
+      LEFT JOIN voucher_entries ve ON l.id = ve.ledger_id
+      LEFT JOIN vouchers v ON ve.voucher_id = v.id
+      WHERE l.company_id = $1
+      GROUP BY l.id, l.group_id
+    `;
+
+    const result: DbQueryResult<{ 
+      ledger_id: string; 
+      group_id: string; 
+      debit_total: string; 
+      credit_total: string; 
+    }> = await client.query(query, [companyId]);
+
+    return result.rows.map(row => {
+      const debitTotal = parseFloat(row.debit_total);
+      const creditTotal = parseFloat(row.credit_total);
+      return {
+        ledgerId: row.ledger_id,
+        groupId: row.group_id,
+        debitTotal,
+        creditTotal,
+        balance: debitTotal - creditTotal
+      };
+    });
   }
 }

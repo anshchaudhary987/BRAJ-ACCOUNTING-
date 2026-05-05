@@ -4,11 +4,28 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export interface State {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface HSN {
+  id: string;
+  code: string;
+  description: string;
+  gstRate: number;
+}
+
 export interface Company {
   id: string;
   name: string;
-  state: string;
+  stateId: string;
+  stateName?: string;
   gstin?: string;
+  pan?: string;
+  tan?: string;
+  gstRegistrationType?: 'Regular' | 'Composition' | 'Unregistered';
   financialYearStart: string;
   booksBeginningDate: string;
   createdAt?: string;
@@ -17,7 +34,7 @@ export interface Company {
 export interface LedgerGroup {
   id: string;
   name: string;
-  parent_id?: string;
+  parentId?: string;
 }
 
 export interface Ledger {
@@ -25,14 +42,16 @@ export interface Ledger {
   companyId: string;
   name: string;
   groupId: string;
-  group_name: string; // Used in current frontend
+  groupName: string;
   gstin?: string;
-  hsnSac?: string;
-  state?: string;
+  hsnCodeId?: string;
+  hsnCode?: string;
+  stateId?: string;
+  stateName?: string;
   openingBalance: number;
   openingBalanceType: 'Dr' | 'Cr';
   tdsApplicable: boolean;
-  tdsNature?: string;
+  tdsNatureCode?: string;
   bankAccountNumber?: string;
   bankIfsc?: string;
   bankBranch?: string;
@@ -44,9 +63,10 @@ export interface VoucherEntry {
   id: string;
   voucherId: string;
   ledgerId: string;
-  amount: number | string;
+  ledgerName?: string;
+  amount: number;
   isDebit: boolean;
-  type?: 'Dr' | 'Cr'; // Component state often uses this
+  type?: 'Dr' | 'Cr';
   cgstAmount?: number;
   sgstAmount?: number;
   igstAmount?: number;
@@ -58,14 +78,14 @@ export interface VoucherEntry {
 export interface Voucher {
   id: string;
   companyId: string;
-  vchNo: string; // Backend uses vchNo based on previous code
-  vchType: string;
+  voucherNumber: string;
+  voucherType: string;
   date: string;
   effectiveDate?: string;
   narration?: string;
   totalDebit?: number;
   totalCredit?: number;
-  totalAmount?: number;
+  financialYear: string;
   entries: VoucherEntry[];
   createdAt?: string;
 }

@@ -1,5 +1,6 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { CompanyRepository } from '../repositories/company.repository.js';
+import { UserRepository } from '../repositories/user.repository.js';
 import pool from '../config/database.js';
 
 /**
@@ -8,29 +9,37 @@ import pool from '../config/database.js';
 export class CompanyController {
   /**
    * Create a new company.
-   * @param req - Express request object
-   * @param res - Express response object
    */
-  static async create(req: Request, res: Response): Promise<void> {
+  static async create(req: any, res: Response): Promise<void> {
     try {
-      const { name, state, gstin, pan, financialYearStart, booksBeginningDate } = req.body;
+      const { 
+        name, stateId, gstin, pan, tan, 
+        gstRegistrationType, financialYearStart, booksBeginningDate 
+      } = req.body;
 
-      // Validate required fields
-      if (!name || !state || !gstin || !pan || !financialYearStart || !booksBeginningDate) {
+      const userId = req.userId;
+
+      if (!name || !stateId || !gstin || !pan || !financialYearStart || !booksBeginningDate) {
         res.status(400).json({ success: false, message: 'Missing required fields' });
         return;
       }
 
-      // Create company using the repository (no companyId needed for creation)
-      const company = await CompanyRepository.create(
-        pool,
+      const company = await CompanyRepository.create(pool, {
         name,
-        state,
+        stateId,
         gstin,
         pan,
+        tan,
+        gstRegistrationType: gstRegistrationType || 'Regular',
         financialYearStart,
         booksBeginningDate
-      );
+      });
+
+      // Link current user as Admin
+      const adminRole = await UserRepository.findRoleByName(pool, 'Admin');
+      if (adminRole && userId) {
+        await UserRepository.addUserToCompany(pool, userId, company.id, adminRole.id);
+      }
 
       res.status(201).json({ success: true, data: company });
     } catch (error) {
@@ -40,13 +49,12 @@ export class CompanyController {
   }
 
   /**
-   * Get all companies.
-   * @param req - Express request object
-   * @param res - Express response object
+   * Get all companies for current user.
    */
-  static async list(req: Request, res: Response): Promise<void> {
+  static async list(req: any, res: Response): Promise<void> {
     try {
-      const companies = await CompanyRepository.findAll(pool);
+      const userId = req.userId;
+      const companies = await CompanyRepository.findByUser(pool, userId);
       res.status(200).json({ success: true, data: companies });
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -56,8 +64,6 @@ export class CompanyController {
 
   /**
    * Get a company by ID.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async getById(req: Request, res: Response): Promise<void> {
     try {
@@ -77,8 +83,6 @@ export class CompanyController {
 
   /**
    * Update a company by ID.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async update(req: Request, res: Response): Promise<void> {
     try {

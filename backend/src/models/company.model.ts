@@ -1,7 +1,14 @@
+export interface IState {
+  id: string;
+  code: string;
+  name: string;
+  type: 'State' | 'Union Territory';
+}
+
 export interface ICompany {
   id?: string;
   name: string;
-  state: string;
+  stateId: string;
   gstin?: string;
   gstRegistrationType?: 'Regular' | 'Composition' | 'Unregistered';
   pan: string;
@@ -9,4 +16,7 @@ export interface ICompany {
   financialYearStart: string; // ISO date string
   booksBeginningDate: string; // ISO date string
   createdAt?: Date;
+  
+  // Joined fields
+  state?: IState;
 }

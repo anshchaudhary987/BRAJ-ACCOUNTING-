@@ -2,21 +2,22 @@
 
 import React, { useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, Orbit } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface HorizonForecasterProps {
-  currentBalance: number;
+  currentBalance?: number;
 }
 
-export default function HorizonForecaster({ currentBalance }: HorizonForecasterProps) {
+export default function HorizonForecaster({ currentBalance = 1245000 }: HorizonForecasterProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   
   // Generate months from Oct 2024 to Dec 2064
   const timelineData = useMemo(() => {
     const data = [];
     const startDate = new Date(2024, 9, 1); // Oct 2024
-    const endDate = new Date(2064, 11, 31); // Dec 2064
+    const endDate = new Date(2030, 11, 31); // Shorter range for better UI
     
     let currentDate = new Date(startDate);
     let runningBalance = currentBalance;
@@ -50,28 +51,28 @@ export default function HorizonForecaster({ currentBalance }: HorizonForecasterP
   };
 
   return (
-    <div className="space-y-4">
+    <div className="p-10 glass-pro rounded-[3rem] border border-white/5 space-y-8 bg-white/[0.01]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-            <Zap size={18} />
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-white/5 text-white/40">
+            <Orbit size={20} />
           </div>
           <div>
-            <h3 className="text-xl font-bold">Horizon Forecaster</h3>
-            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">Predictive Quantum Ledger • 2024 - 2064</p>
+            <h3 className="text-xl font-bold tracking-tight text-white">Equilibrium Projection</h3>
+            <p className="text-[10px] text-white/20 uppercase font-black tracking-[0.2em] mt-1">Predictive Analytics • 2024 - 2030</p>
           </div>
         </div>
         
         <div className="flex gap-2">
           <button 
             onClick={() => scroll('left')}
-            className="p-2 rounded-xl glass-premium border-white/5 hover:bg-white/10 transition-colors"
+            className="p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-white/20 hover:text-white"
           >
             <ChevronLeft size={20} />
           </button>
           <button 
             onClick={() => scroll('right')}
-            className="p-2 rounded-xl glass-premium border-white/5 hover:bg-white/10 transition-colors"
+            className="p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-white/20 hover:text-white"
           >
             <ChevronRight size={20} />
           </button>
@@ -80,36 +81,39 @@ export default function HorizonForecaster({ currentBalance }: HorizonForecasterP
 
       <div 
         ref={scrollRef}
-        className="glass-premium rounded-[2rem] p-8 overflow-x-auto no-scrollbar relative"
+        className="overflow-x-auto no-scrollbar relative"
       >
-        <div className="flex gap-8 items-end min-w-max h-[150px]">
+        <div className="flex gap-8 items-end min-w-max h-[200px] pb-4">
           {timelineData.map((item, idx) => {
             const isYearStart = item.date.getMonth() === 0;
             const height = Math.max(20, Math.min(100, (item.balance / (currentBalance * 5)) * 100));
             
             return (
-              <div key={idx} className="flex flex-col items-center gap-4 group cursor-pointer">
+              <div key={idx} className="flex flex-col items-center gap-6 group cursor-pointer">
                 <div className="relative flex flex-col items-center">
                   {/* Predicted Line Segment */}
                   <motion.div 
                     initial={{ height: 0 }}
                     animate={{ height: `${height}%` }}
-                    className={`w-1 rounded-full ${isYearStart ? 'bg-amber-500' : 'bg-white/10 group-hover:bg-amber-500/50'} transition-colors`}
+                    className={cn(
+                      "w-1.5 rounded-full transition-all duration-500",
+                      isYearStart ? "bg-white" : "bg-white/10 group-hover:bg-white/40"
+                    )}
                   />
                   
                   {/* Tooltip on hover */}
-                  <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-white/10 p-2 rounded-lg text-[10px] whitespace-nowrap z-50">
-                    <p className="font-bold text-amber-400">{item.label} {item.year}</p>
-                    <p className="font-mono">{formatCurrency(item.balance)}</p>
+                  <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-all bg-black border border-white/10 p-3 rounded-2xl text-[10px] whitespace-nowrap z-50 shadow-2xl translate-y-2 group-hover:translate-y-0">
+                    <p className="font-black uppercase tracking-widest text-white/40 mb-1">{item.label} {item.year}</p>
+                    <p className="font-mono font-bold text-white text-sm">{formatCurrency(item.balance)}</p>
                   </div>
                 </div>
                 
                 <div className="text-center">
-                  {isYearStart && (
-                    <span className="text-[10px] font-black text-slate-500 mb-1 block">{item.year}</span>
-                  )}
-                  <span className={`text-[8px] font-bold uppercase tracking-tighter ${isYearStart ? 'text-amber-500' : 'text-slate-600'}`}>
-                    {item.label}
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-tighter transition-colors",
+                    isYearStart ? "text-white" : "text-white/20"
+                  )}>
+                    {isYearStart ? item.year : item.label}
                   </span>
                 </div>
               </div>
@@ -118,7 +122,7 @@ export default function HorizonForecaster({ currentBalance }: HorizonForecasterP
         </div>
         
         {/* Connection Line */}
-        <div className="absolute bottom-[6.5rem] left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+        <div className="absolute bottom-12 left-0 right-0 h-px bg-white/5 pointer-events-none" />
       </div>
     </div>
   );

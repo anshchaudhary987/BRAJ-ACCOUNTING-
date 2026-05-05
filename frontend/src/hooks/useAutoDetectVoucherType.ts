@@ -12,7 +12,7 @@ export function useAutoDetectVoucherType(entries: VoucherEntryFormValue[], ledge
     const drEntries = entries.filter(e => e.type === 'Dr' && e.ledgerId);
     const crEntries = entries.filter(e => e.type === 'Cr' && e.ledgerId);
 
-    const getGroup = (id: string) => ledgers.find(l => l.id === id)?.group_name || '';
+    const getGroup = (id: string) => ledgers.find(l => l.id === id)?.groupName || '';
 
     const drGroups = drEntries.map(e => getGroup(e.ledgerId));
     const crGroups = crEntries.map(e => getGroup(e.ledgerId));

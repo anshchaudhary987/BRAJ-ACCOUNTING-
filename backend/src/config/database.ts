@@ -44,18 +44,19 @@ export async function query(text: string, params?: any[]) {
       .replace(/UUID/gi, "TEXT")
       .replace(/SERIAL/gi, "INTEGER")
       .replace(/NUMERIC\(\d+,\d+\)/gi, "REAL")
-      .replace(/RETURNING \*/gi, "");
+      .replace(/RETURNING .*$/gi, "");
     
     if (processedText.trim().toUpperCase().startsWith('SELECT')) {
-      const rows = sqlite.prepare(processedText).all(params || []);
+      const rows = sqlite.prepare(processedText).all(params?.map((p: any) => typeof p === 'boolean' ? (p ? 1 : 0) : p) || []);
       return { rows };
     } else {
-      const result = sqlite.prepare(processedText).run(params || []);
+      const result = sqlite.prepare(processedText).run(params?.map((p: any) => typeof p === 'boolean' ? (p ? 1 : 0) : p) || []);
       
-      if (text.toUpperCase().includes('RETURNING *')) {
+      if (text.toUpperCase().includes('RETURNING')) {
         const tableMatch = text.match(/INSERT INTO (\w+)/i) || text.match(/UPDATE (\w+)/i);
         if (tableMatch) {
           const tableName = tableMatch[1];
+          // For UPDATE, we might need a different way to find the row, but for now we focus on INSERT
           const lastRow = sqlite.prepare(`SELECT * FROM ${tableName} WHERE rowid = ?`).get(result.lastInsertRowid);
           return { rows: [lastRow] };
         }

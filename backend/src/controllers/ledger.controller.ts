@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { LedgerRepository } from '../repositories/ledger.repository.js';
 import pool from '../config/database.js';
 
@@ -8,21 +8,21 @@ import pool from '../config/database.js';
 export class LedgerController {
   /**
    * Create a new ledger.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async createLedger(req: Request, res: Response): Promise<void> {
     try {
-      // Extract companyId from headers for tenancy check
       const headerCompanyId = req.headers['x-company-id'] as string;
       if (!headerCompanyId) {
         res.status(400).json({ success: false, message: 'Missing company ID in headers' });
         return;
       }
 
-      const { name, groupId, gstin, hsnSac, state, openingBalance, openingBalanceType, tdsApplicable, tdsNature, bankAccountNumber, bankIfsc, bankBranch } = req.body;
+      const { 
+        name, groupId, gstin, hsnCodeId, stateId, 
+        openingBalance, openingBalanceType, tdsApplicable, 
+        tdsNatureCode, bankAccountNumber, bankIfsc, bankBranch 
+      } = req.body;
 
-      // Validate required fields
       if (!name || !groupId) {
         res.status(400).json({ success: false, message: 'Missing required fields: name and groupId are required' });
         return;
@@ -32,12 +32,12 @@ export class LedgerController {
         name,
         groupId,
         gstin,
-        hsnSac,
-        state,
-        openingBalance,
-        openingBalanceType,
-        tdsApplicable,
-        tdsNature,
+        hsnCodeId,
+        stateId,
+        openingBalance: openingBalance || 0,
+        openingBalanceType: openingBalanceType || 'Dr',
+        tdsApplicable: tdsApplicable || false,
+        tdsNatureCode,
         bankAccountNumber,
         bankIfsc,
         bankBranch
@@ -52,12 +52,9 @@ export class LedgerController {
 
   /**
    * Get ledgers by company ID.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async getLedgersByCompany(req: Request, res: Response): Promise<void> {
     try {
-      // Extract companyId from headers for tenancy check
       const headerCompanyId = req.headers['x-company-id'] as string;
       if (!headerCompanyId) {
         res.status(400).json({ success: false, message: 'Missing company ID in headers' });
@@ -74,8 +71,6 @@ export class LedgerController {
 
   /**
    * Get a ledger by ID.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async getLedgerById(req: Request, res: Response): Promise<void> {
     try {
@@ -101,8 +96,6 @@ export class LedgerController {
 
   /**
    * Update a ledger by ID.
-   * @param req - Express request object
-   * @param res - Express response object
    */
   static async updateLedger(req: Request, res: Response): Promise<void> {
     try {

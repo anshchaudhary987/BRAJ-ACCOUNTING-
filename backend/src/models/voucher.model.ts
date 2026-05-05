@@ -9,6 +9,7 @@ export interface IVoucher {
   narration?: string;
   totalDebit: number;
   totalCredit: number;
+  financialYear: string; // e.g. '2024-25'
   entries: IVoucherEntry[];
   createdAt?: Date;
 }

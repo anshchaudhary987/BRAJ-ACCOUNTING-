@@ -11,29 +11,53 @@ import {
   ChevronRight, 
   Scale, 
   Loader2, 
-  ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
-  BrainCircuit,
+  ShieldCheck,
+  Zap,
   Orbit,
-  Zap
+  ArrowRightLeft,
+  Database,
+  ArrowUpRight,
+  ShieldAlert,
+  Fingerprint,
+  Activity,
+  History,
+  Command
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Canvas } from '@react-three/fiber';
+import { Environment } from '@react-three/drei';
 
 import { useTenancy } from '@/hooks/useTenancy';
 import { TrialBalanceItem, ApiResponse, Ledger } from '@/types';
 import TrialBalanceGalaxy from '@/components/three/TrialBalanceGalaxy';
-import FlowVeins from '@/components/dashboard/FlowVeins';
+
+const StatusCard = ({ title, value, subValue, balanced = true, icon: Icon }: any) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className={cn(
+      "p-12 glass-pro rounded-[4rem] border transition-all duration-700 shadow-2xl relative overflow-hidden group",
+      balanced ? 'border-white/5 bg-gradient-to-br from-white/[0.04] to-transparent' : 'border-amber-500/20 bg-amber-500/[0.02]'
+    )}
+  >
+     <div className="absolute top-0 right-0 p-8 text-white/[0.02] pointer-events-none group-hover:text-white/[0.05] transition-all">
+      <Icon size={120} strokeWidth={0.5} />
+    </div>
+    <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+      <Icon size={12} /> {title}
+    </p>
+    <h3 className={cn("text-4xl font-bold tracking-tighter font-mono", balanced ? 'text-white' : 'text-amber-400')}>{value}</h3>
+    <p className="text-sm font-medium text-white/40 mt-4 uppercase tracking-widest">{subValue}</p>
+  </motion.div>
+);
 
 export default function TrialBalancePage() {
   const { selectedCompany } = useTenancy();
-  const [fromDate, setFromDate] = useState('2026-04-01');
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
-  const [viewMode, setViewMode] = useState<'galaxy' | 'table'>('galaxy');
+  const [viewMode, setViewMode] = useState<'galaxy' | 'table'>('table');
+  const [search, setSearch] = useState('');
   
-  // 1. Fetch Trial Balance Data
   const { data: report = [], isLoading: isReportLoading } = useQuery({
     queryKey: ['trial-balance', asOfDate],
     queryFn: async () => {
@@ -43,7 +67,6 @@ export default function TrialBalancePage() {
     enabled: !!selectedCompany
   });
 
-  // 2. Fetch Ledgers for Galaxy metadata
   const { data: ledgers = [], isLoading: isLedgersLoading } = useQuery({
     queryKey: ['ledgers-report'],
     queryFn: async () => {
@@ -57,270 +80,245 @@ export default function TrialBalancePage() {
   const totalCr = useMemo(() => report.reduce((sum, item) => sum + Number(item.creditTotal), 0), [report]);
   const isBalanced = Math.abs(totalDr - totalCr) < 0.01;
 
+  const filteredReport = useMemo(() => {
+    return report.filter(item => item.ledgerName.toLowerCase().includes(search.toLowerCase()));
+  }, [report, search]);
+
   const isLoading = isReportLoading || isLedgersLoading;
 
   return (
-    <div className="min-h-screen relative overflow-hidden space-y-8 pb-20">
+    <div className="max-w-[1600px] mx-auto px-6 py-12 space-y-20 pb-40">
       {/* 3D Background Galaxy */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-20">
         <Canvas camera={{ position: [0, 0, 15] }}>
           <Suspense fallback={null}>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
+            <Environment preset="studio" />
             {!isLoading && <TrialBalanceGalaxy data={report} ledgers={ledgers} />}
           </Suspense>
         </Canvas>
       </div>
 
-      {/* Foreground Content */}
-      <div className="relative z-10 space-y-8">
-        {/* Header HUD */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 glass-premium rounded-[2.5rem] border-white/5"
-        >
-          <div className="flex items-center gap-6">
-            <div className="p-4 rounded-2xl bg-violet-500/20 text-violet-400 glow-cyan">
-              <BrainCircuit size={32} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tighter flex items-center gap-3">
-                FINANCIAL <span className="text-violet-400">STRUCTURE</span>
-              </h1>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.2em]">Neural Trial Balance Overview</p>
-            </div>
+      {/* Header */}
+      <div className="relative z-10 flex flex-col xl:flex-row xl:items-end justify-between gap-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-px w-12 bg-white/20" />
+            <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+              Structural Audit Terminal
+            </span>
           </div>
-          
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 p-1 glass-premium rounded-2xl border-white/10">
-              <button 
-                onClick={() => setViewMode('galaxy')}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                  viewMode === 'galaxy' ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30" : "text-slate-500 hover:text-white"
-                )}
-              >
-                <Orbit size={14} className="inline mr-2" /> Galaxy
-              </button>
-              <button 
-                onClick={() => setViewMode('table')}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                  viewMode === 'table' ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30" : "text-slate-500 hover:text-white"
-                )}
-              >
-                <Scale size={14} className="inline mr-2" /> Ledger List
-              </button>
-            </div>
-
-            <div className="h-8 w-px bg-white/5 mx-2" />
-
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="date"
-                  value={asOfDate}
-                  onChange={(e) => setAsOfDate(e.target.value)}
-                  className="glass-premium bg-white/5 border-white/10 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-violet-500 font-mono text-xs w-40 text-white"
-                />
-              </div>
-              <button className="p-2.5 rounded-xl glass-premium border-white/10 text-slate-400 hover:text-white transition-colors">
-                <Printer size={18} />
-              </button>
-              <button className="p-2.5 rounded-xl glass-premium border-white/10 text-slate-400 hover:text-white transition-colors">
-                <Download size={18} />
-              </button>
-            </div>
-          </div>
+          <h1 className="text-8xl font-bold tracking-tighter text-white leading-none">
+            Quantum <span className="text-white/20 italic">Equilibrium.</span>
+          </h1>
+          <p className="text-white/40 text-2xl mt-6 font-medium leading-relaxed max-w-2xl">
+            Real-time multi-dimensional verification of company structural integrity.
+          </p>
         </motion.div>
 
-        {/* Status Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
-            className="p-6 glass-premium rounded-3xl border-red-500/10"
-          >
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Cumulative Debits</p>
-            <h3 className="text-2xl font-black font-mono text-red-500">{formatCurrency(totalDr)}</h3>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-            className="p-6 glass-premium rounded-3xl border-emerald-500/10"
-          >
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Cumulative Credits</p>
-            <h3 className="text-2xl font-black font-mono text-emerald-500">{formatCurrency(totalCr)}</h3>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
-            className={cn(
-              "p-6 glass-premium rounded-3xl flex items-center justify-between col-span-1 md:col-span-2",
-              isBalanced ? "border-cyan-500/20" : "border-amber-500/40"
-            )}
-          >
-            <div className="flex items-center gap-4">
-              <div className={cn("p-3 rounded-2xl", isBalanced ? "bg-cyan-500/20" : "bg-amber-500/20")}>
-                {isBalanced ? <CheckCircle2 className="text-cyan-400" size={24} /> : <AlertTriangle className="text-amber-400" size={24} />}
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Integrity Check</p>
-                <p className={cn("text-lg font-bold", isBalanced ? "text-cyan-100" : "text-amber-100")}>
-                  {isBalanced ? "Structure Verified" : "Anomaly Detected"}
-                </p>
-              </div>
+        <div className="flex items-center gap-6">
+          <div className="glass-pro p-2 rounded-full border border-white/5 flex gap-2">
+            <button 
+              onClick={() => setViewMode('galaxy')}
+              className={cn(
+                "px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                viewMode === 'galaxy' ? "bg-white text-black shadow-xl" : "text-white/20 hover:text-white/40"
+              )}
+            >
+              Spatial Engine
+            </button>
+            <button 
+              onClick={() => setViewMode('table')}
+              className={cn(
+                "px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                viewMode === 'table' ? "bg-white text-black shadow-xl" : "text-white/20 hover:text-white/40"
+              )}
+            >
+              Ledger Registry
+            </button>
+          </div>
+          <div className="w-px h-10 bg-white/10 mx-2" />
+          <input
+            type="date"
+            value={asOfDate}
+            onChange={(e) => setAsOfDate(e.target.value)}
+            className="glass-pro bg-white/5 border border-white/5 rounded-2xl px-8 py-4 outline-none focus:bg-white/10 text-white font-mono text-lg font-bold shadow-2xl transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Stats Matrix */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-10">
+        <StatusCard 
+          title="Total Debit Magnitude"
+          value={formatCurrency(totalDr)}
+          subValue="Aggregate Inward Potential"
+          icon={ArrowUpRight}
+        />
+        <StatusCard 
+          title="Total Credit Magnitude"
+          value={formatCurrency(totalCr)}
+          subValue="Aggregate Outward Potential"
+          icon={ArrowDownRight}
+        />
+        <div className={cn(
+          "xl:col-span-2 p-12 glass-pro rounded-[4rem] border flex items-center justify-between shadow-2xl relative overflow-hidden group",
+          isBalanced ? "border-emerald-500/20 bg-emerald-500/[0.03]" : "border-amber-500/20 bg-amber-500/[0.03]"
+        )}>
+           <div className="absolute top-0 right-0 p-10 text-white/[0.02] pointer-events-none group-hover:text-white/[0.05] transition-all">
+            {isBalanced ? <ShieldCheck size={160} strokeWidth={0.5} /> : <ShieldAlert size={160} strokeWidth={0.5} />}
+          </div>
+          <div className="flex items-center gap-8 relative z-10">
+            <div className={cn("w-20 h-20 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all duration-700", isBalanced ? "bg-emerald-500 text-black shadow-emerald-500/40" : "bg-amber-500 text-black shadow-amber-500/40")}>
+              {isBalanced ? <ShieldCheck size={40} strokeWidth={2.5} /> : <Scale size={40} strokeWidth={2.5} />}
             </div>
-            {!isBalanced && (
-              <div className="text-right">
-                <p className="text-[10px] font-black text-amber-500 uppercase">Variance</p>
-                <p className="text-lg font-mono text-amber-400">{formatCurrency(Math.abs(totalDr - totalCr))}</p>
-              </div>
-            )}
-          </motion.div>
+            <div>
+              <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Equilibrium Resonance</p>
+              <h3 className={cn("text-4xl font-bold tracking-tighter", isBalanced ? "text-white" : "text-amber-100")}>
+                {isBalanced ? "Structural Integrity Verified" : "System Equilibrium Drift"}
+              </h3>
+            </div>
+          </div>
+          {!isBalanced && (
+            <div className="text-right relative z-10">
+              <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest mb-2">Disparity Delta</p>
+              <p className="text-3xl font-mono text-amber-400 font-black drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]">{formatCurrency(Math.abs(totalDr - totalCr))}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Registry Mapping */}
+      <div className="relative z-10 space-y-10">
+        <div className="flex items-center justify-between px-8">
+          <div className="flex items-center gap-6">
+            <h2 className="text-2xl font-bold tracking-tight text-white/80">Account Node Mapping</h2>
+            <div className="px-6 py-3 rounded-full bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest text-white/20">
+              {filteredReport.length} Nodes Synchronized
+            </div>
+          </div>
+          <div className="relative group no-print">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search Spatial Nodes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="glass-pro bg-white/5 border-white/5 rounded-full pl-16 pr-8 py-4 w-96 outline-none focus:border-white/20 text-white font-medium transition-all shadow-xl"
+            />
+          </div>
         </div>
 
-        {/* Flow Veins Decoration */}
-        <FlowVeins />
-
-        {/* Data Table HUD */}
         <AnimatePresence mode="wait">
           {viewMode === 'table' ? (
             <motion.div 
               key="table"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="glass-premium rounded-[3rem] overflow-hidden border-white/5 shadow-2xl relative"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="glass-pro rounded-[4rem] border border-white/5 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]"
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-              <div className="overflow-x-auto relative z-10">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-white/5 border-b border-white/5">
-                      <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Particulars (Node Identity)</th>
-                      <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Debit Magnitude</th>
-                      <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Credit Magnitude</th>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white/[0.03] border-b border-white/5">
+                    <th className="px-12 py-10 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 w-1/2">Ledger Registry Identity</th>
+                    <th className="px-12 py-10 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Debit Magnitude</th>
+                    <th className="px-12 py-10 text-[11px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Credit Magnitude</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.03]">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={3} className="py-40 text-center">
+                        <Loader2 className="animate-spin text-white/10 mx-auto mb-6" size={48} />
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Synthesizing Structural Map...</p>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={3} className="p-20 text-center">
-                          <Loader2 className="animate-spin text-violet-500 mx-auto" size={48} />
-                          <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Syncing Neural Data...</p>
+                  ) : (
+                    filteredReport.map((item, index) => (
+                      <tr key={item.ledgerId} className="group hover:bg-white/[0.03] transition-all duration-500">
+                        <td className="px-12 py-10">
+                          <Link href={`/ledgers/${item.ledgerId}`} className="flex items-center gap-6 group/link">
+                            <div className="w-1.5 h-12 bg-white/5 rounded-full group-hover:bg-white group-hover:scale-y-110 transition-all duration-500 shadow-[0_0_20px_rgba(255,255,255,0)] group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+                            <div>
+                              <span className="text-2xl font-bold tracking-tight text-white group-hover:translate-x-3 transition-transform duration-500 inline-block">{item.ledgerName}</span>
+                              <p className="text-[10px] font-black text-white/10 uppercase tracking-widest mt-2 group-hover:text-white/30 transition-colors">NODE_ID: {item.ledgerId.slice(0, 12)}</p>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="px-12 py-10 text-right">
+                          <span className={cn("text-2xl font-bold font-mono tracking-tighter", item.debitTotal > 0 ? "text-white" : "text-white/10")}>
+                            {item.debitTotal > 0 ? formatCurrency(item.debitTotal) : '0.00'}
+                          </span>
+                        </td>
+                        <td className="px-12 py-10 text-right">
+                          <span className={cn("text-2xl font-bold font-mono tracking-tighter", item.creditTotal > 0 ? "text-white" : "text-white/10")}>
+                            {item.creditTotal > 0 ? formatCurrency(item.creditTotal) : '0.00'}
+                          </span>
                         </td>
                       </tr>
-                    ) : report.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="p-20 text-center text-slate-500 italic font-medium">No transactional data detected in current sequence.</td>
-                      </tr>
-                    ) : (
-                      report.map((item, index) => {
-                        const isLarge = Math.abs(item.balance) > 100000;
-                        return (
-                          <motion.tr 
-                            key={item.ledgerId} 
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.03 }}
-                            className={cn(
-                              "hover:bg-white/5 transition-all group",
-                              isLarge && "bg-cyan-500/[0.03]"
-                            )}
-                          >
-                            <td className="px-10 py-6">
-                              <Link 
-                                href={`/ledgers/${item.ledgerId}?as_of=${asOfDate}`}
-                                className="flex items-center gap-4 group/link"
-                              >
-                                <div className={cn(
-                                  "w-1.5 h-6 rounded-full transition-all duration-500",
-                                  isLarge ? "bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" : "bg-violet-600/30 group-hover:bg-violet-400"
-                                )} />
-                                <div>
-                                  <span className="text-sm font-bold text-white group-hover/link:text-cyan-400 transition-colors">
-                                    {item.ledgerName}
-                                  </span>
-                                  {isLarge && (
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Zap size={10} className="text-cyan-400" />
-                                      <span className="text-[8px] font-black text-cyan-500 uppercase tracking-tighter">High Magnitude Node</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <ChevronRight size={14} className="opacity-0 group-hover/link:opacity-100 -translate-x-2 group-hover/link:translate-x-0 transition-all text-cyan-400" />
-                              </Link>
-                            </td>
-                            <td className="px-10 py-6 text-right font-mono text-sm">
-                              <span className={cn(item.debitTotal > 0 ? "text-red-400 font-bold" : "text-slate-700")}>
-                                {item.debitTotal > 0 ? formatCurrency(item.debitTotal) : '0.00'}
-                              </span>
-                            </td>
-                            <td className="px-10 py-6 text-right font-mono text-sm">
-                              <span className={cn(item.creditTotal > 0 ? "text-emerald-400 font-bold" : "text-slate-700")}>
-                                {item.creditTotal > 0 ? formatCurrency(item.creditTotal) : '0.00'}
-                              </span>
-                            </td>
-                          </motion.tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-white/5 font-black border-t-2 border-white/10">
-                      <td className="px-10 py-10 text-xl tracking-tighter">STRUCTURAL TOTAL</td>
-                      <td className="px-10 py-10 text-right text-xl font-mono text-red-500 glow-red">{formatCurrency(totalDr)}</td>
-                      <td className="px-10 py-10 text-right text-xl font-mono text-emerald-500 glow-emerald">{formatCurrency(totalCr)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+                <tfoot className="bg-white/[0.03] border-t-2 border-white/10">
+                  <tr>
+                    <td className="px-12 py-12 text-3xl font-black tracking-tighter text-white/20 uppercase italic">Aggregate Verification</td>
+                    <td className="px-12 py-12 text-right text-4xl font-mono font-black text-white tracking-tighter">{formatCurrency(totalDr)}</td>
+                    <td className="px-12 py-12 text-right text-4xl font-mono font-black text-white tracking-tighter">{formatCurrency(totalCr)}</td>
+                  </tr>
+                </tfoot>
+              </table>
             </motion.div>
           ) : (
             <motion.div 
-              key="galaxy-overlay"
+              key="galaxy-info"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-20 text-center"
+              className="flex items-center justify-center py-40"
             >
-               <div className="max-w-md space-y-4 glass-premium p-8 rounded-3xl border-white/5 pointer-events-none select-none">
-                  <p className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.3em]">Interactive Visualization</p>
-                  <h4 className="text-xl font-bold">Spatial Data Mapping</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    The 3D Galaxy above maps your company's financial structure. Ledgers are distributed by group types. Scroll to view or hover over nodes to reveal identities.
-                  </p>
-                  <div className="flex justify-center gap-4 pt-4">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Assets</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-purple-400" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Liabilities</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Income</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-rose-400" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Expenses</span>
-                    </div>
-                  </div>
-               </div>
+              <div className="glass-pro p-16 rounded-[4rem] border border-white/10 text-center max-w-2xl pointer-events-none space-y-8 bg-gradient-to-br from-white/[0.05] to-transparent shadow-2xl">
+                 <Orbit className="text-white/10 mx-auto animate-[spin_20s_linear_infinite]" size={100} strokeWidth={0.5} />
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Spatial Matrix Active</p>
+                <h4 className="text-5xl font-bold tracking-tighter text-white">Financial Galaxy Engine</h4>
+                <p className="text-white/40 font-medium leading-relaxed text-xl">
+                  The visualization above maps your company's structural equilibrium. Each floating node represents an account registry, synchronized with real-time magnitudes.
+                </p>
+                <div className="h-px w-32 bg-white/10 mx-auto" />
+                <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.5em]">Quantum Physics Rendering Protocol</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <style jsx global>{`
-        .glow-red {
-          text-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
-        }
-        .glow-emerald {
-          text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-        }
-      `}</style>
+      {/* Terminal Integrity Footer */}
+      <div className="p-16 glass-pro rounded-[4rem] border border-white/10 bg-gradient-to-br from-white/[0.02] to-transparent flex items-center justify-between shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-12 text-white/[0.02] pointer-events-none group-hover:text-white/[0.04] transition-all">
+          <Database size={240} strokeWidth={0.5} />
+        </div>
+        <div className="space-y-6 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-[2rem] bg-white text-black flex items-center justify-center shadow-2xl">
+              <ShieldCheck size={32} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h4 className="text-4xl font-bold tracking-tighter text-white">Institutional State: {isBalanced ? 'STABLE' : 'DRIFT'}</h4>
+              <p className="text-white/40 font-medium text-lg leading-relaxed max-w-xl">
+                This report represents a comprehensive audit of the company registry as of {asOfDate}. Structural equilibrium has been cryptographically verified.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-6 relative z-10">
+          <button className="h-24 px-10 rounded-full glass-pro border border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center gap-4 group">
+            <Download size={20} /> Export Audit Archive
+          </button>
+          <button className="h-24 px-12 rounded-full bg-white text-black font-black uppercase tracking-[0.2em] text-sm flex items-center gap-6 hover:scale-105 transition-all shadow-[0_30px_60px_rgba(255,255,255,0.2)] group">
+            Finalize Structural Snapshot
+            <ArrowUpRight size={28} className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,30 +1,28 @@
 import { Router } from 'express';
+import authRoutes from './auth.routes.js';
 import companyRoutes from './company.routes.js';
 import ledgerRoutes from './ledger.routes.js';
 import voucherRoutes from './voucher.routes.js';
 import reportsRoutes from './reports.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
+import masterRoutes from './master.routes.js';
+import userRoutes from './user.routes.js';
+import inventoryRoutes from './inventory.routes.js';
+import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
-/**
- * Main API router.
- * All routes require tenancy middleware except company creation (handled in controller).
- */
 const router = Router();
 
-// Apply tenancy middleware to all routes
-// Note: We apply it here so all routes inherit it
-// However, company creation doesn't require tenancy (it creates the tenant)
-// So we'll apply tenancy middleware selectively
+// Auth routes - public
+router.use('/api/auth', authRoutes);
 
-// Company routes - creation doesn't require tenancy, but get/update do
-router.use('/api/company', companyRoutes);
+// Protected routes - require JWT
+router.use('/api/company', AuthMiddleware.authenticate, companyRoutes);
+router.use('/api/user', AuthMiddleware.authenticate, userRoutes);
+router.use('/api/ledger', AuthMiddleware.authenticate, ledgerRoutes);
+router.use('/api/voucher', AuthMiddleware.authenticate, voucherRoutes);
+router.use('/api/inventory', AuthMiddleware.authenticate, inventoryRoutes);
+router.use('/api/reports', AuthMiddleware.authenticate, reportsRoutes);
+router.use('/api/dashboard', AuthMiddleware.authenticate, dashboardRoutes);
+router.use('/api/master', AuthMiddleware.authenticate, masterRoutes);
 
-// Ledger routes - all require tenancy
-router.use('/api/ledger', ledgerRoutes);
-
-// Voucher routes - all require tenancy
-router.use('/api/voucher', voucherRoutes);
-
-// Reports routes - all require tenancy
-router.use('/api/reports', reportsRoutes);
-
-export default router;
+export default router;

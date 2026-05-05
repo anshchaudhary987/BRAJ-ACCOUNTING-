@@ -12,6 +12,18 @@ export interface IGroup {
   remarks: string | null;
 }
 
+function mapGroupRow(row: any): IGroup {
+  if (!row) return row;
+  return {
+    id: row.id,
+    name: row.name,
+    parentId: row.parent_id,
+    type: row.type,
+    isGstRelevant: Boolean(row.is_gst_relevant),
+    remarks: row.remarks
+  };
+}
+
 /**
  * Repository for group data access.
  */
@@ -23,7 +35,7 @@ export class GroupRepository {
    */
   static async findAll(client: DbClient): Promise<IGroup[]> {
     const query = 'SELECT * FROM groups ORDER BY name';
-    const result: DbQueryResult<IGroup> = await client.query(query);
-    return result.rows;
+    const result: DbQueryResult<any> = await client.query(query);
+    return result.rows.map(mapGroupRow);
   }
 }

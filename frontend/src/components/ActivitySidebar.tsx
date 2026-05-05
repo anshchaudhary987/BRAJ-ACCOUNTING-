@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useActivityStore } from '@/store/useActivityStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useCompanyStore } from '@/store/useCompanyStore';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Voucher, Ledger, ApiResponse } from '@/types';
 import Link from 'next/link';
@@ -31,6 +33,8 @@ type ActivityItem = {
 
 function ActivitySidebarComponent() {
   const { isOpen, close, toggle } = useActivityStore();
+  const token = useAuthStore(state => state.token);
+  const selectedCompany = useCompanyStore(state => state.selectedCompany);
 
   useHotkeys('ctrl+shift+a', (e) => {
     e.preventDefault();
@@ -39,23 +43,23 @@ function ActivitySidebarComponent() {
 
   // Fetch Vouchers
   const { data: vouchers = [], isLoading: isVouchersLoading } = useQuery({
-    queryKey: ['recent-vouchers-activity'],
+    queryKey: ['recent-vouchers-activity', selectedCompany?.id],
     queryFn: async () => {
       const res = await api.get<ApiResponse<Voucher[]>>('/voucher');
       return res.data.data;
     },
-    enabled: isOpen,
+    enabled: isOpen && !!token && !!selectedCompany?.id,
     staleTime: 1000 * 30, // 30 seconds
   });
 
   // Fetch Ledgers
   const { data: ledgers = [], isLoading: isLedgersLoading } = useQuery({
-    queryKey: ['recent-ledgers-activity'],
+    queryKey: ['recent-ledgers-activity', selectedCompany?.id],
     queryFn: async () => {
       const res = await api.get<ApiResponse<Ledger[]>>('/ledger');
       return res.data.data;
     },
-    enabled: isOpen,
+    enabled: isOpen && !!token && !!selectedCompany?.id,
     staleTime: 1000 * 30,
   });
 

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { ApiResponse, Voucher, Ledger } from '@/types';
 import { format, subDays, isSameDay, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function CashFlowChart() {
   const { data: vouchers = [] } = useQuery({
@@ -63,24 +64,16 @@ export default function CashFlowChart() {
   }, [vouchers, cashBankLedgerIds]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="p-6 glass-premium rounded-3xl border border-cyan-500/20 bg-cyan-500/5 h-[300px] flex flex-col"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-bold text-cyan-100">Cash Dynamics</h3>
-          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">7-Day Liquidity Stream</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-cyan-500" />
-            <span className="text-[10px] text-slate-400 font-bold uppercase">Inflow</span>
+    <div className="w-full h-full flex flex-col">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-white" />
+            <span className="text-[10px] text-white/40 font-black uppercase tracking-widest">Inflow</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-            <span className="text-[10px] text-slate-400 font-bold uppercase">Outflow</span>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-white/20" />
+            <span className="text-[10px] text-white/40 font-black uppercase tracking-widest">Outflow</span>
           </div>
         </div>
       </div>
@@ -90,12 +83,12 @@ export default function CashFlowChart() {
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#ffffff" stopOpacity={0.1}/>
+                <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
               </linearGradient>
               <linearGradient id="colorOutflow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#ffffff" stopOpacity={0.05}/>
+                <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
@@ -103,16 +96,26 @@ export default function CashFlowChart() {
               dataKey="name" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }}
+              tick={{ fill: '#ffffff20', fontSize: 10, fontWeight: '900' }}
+              dy={10}
             />
+            <YAxis hide />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', fontSize: '12px' }}
-              itemStyle={{ color: '#f1f5f9' }}
+              contentStyle={{ 
+                backgroundColor: '#000000', 
+                borderRadius: '20px', 
+                border: '1px solid #ffffff10', 
+                fontSize: '12px',
+                fontWeight: 'bold',
+                color: '#ffffff'
+              }}
+              itemStyle={{ color: '#ffffff' }}
+              cursor={{ stroke: '#ffffff10', strokeWidth: 1 }}
             />
             <Area 
               type="monotone" 
               dataKey="inflow" 
-              stroke="#06b6d4" 
+              stroke="#ffffff" 
               fillOpacity={1} 
               fill="url(#colorInflow)" 
               strokeWidth={3}
@@ -120,14 +123,15 @@ export default function CashFlowChart() {
             <Area 
               type="monotone" 
               dataKey="outflow" 
-              stroke="#a855f7" 
+              stroke="#ffffff30" 
               fillOpacity={1} 
               fill="url(#colorOutflow)" 
-              strokeWidth={3}
+              strokeWidth={2}
+              strokeDasharray="5 5"
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   );
 }

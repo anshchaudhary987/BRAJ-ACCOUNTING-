@@ -3,31 +3,69 @@ import type { DbClient, DbQueryResult } from '../types/database.js';
 // Interface for voucher row (matches vouchers table)
 interface VoucherRow {
   id: string;
-  company_id: string;
-  voucher_number: string;
-  voucher_type: string;
-  date: string; // Assuming date stored as string or date
-  effective_date: string; // Assuming date stored as string or date
+  companyId: string;
+  voucherNumber: string;
+  voucherType: string;
+  date: string; 
+  effectiveDate: string; 
   narration?: string | null;
-  total_debit: number;
-  total_credit: number;
-  created_at?: Date;
-  updated_at?: Date;
+  totalDebit: number;
+  totalCredit: number;
+  financialYear: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+function mapVoucherRow(row: any): VoucherRow {
+  if (!row) return row;
+  return {
+    id: row.id,
+    companyId: row.company_id,
+    voucherNumber: row.voucher_number,
+    voucherType: row.voucher_type,
+    date: row.date,
+    effectiveDate: row.effective_date,
+    narration: row.narration,
+    totalDebit: parseFloat(row.total_debit || '0'),
+    totalCredit: parseFloat(row.total_credit || '0'),
+    financialYear: row.financial_year,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
 }
 
 // Interface for voucher entry row (matches voucher_entries table)
 interface VoucherEntryRow {
   id: string;
-  voucher_id: string;
-  ledger_id: string;
+  voucherId: string;
+  ledgerId: string;
   amount: number;
-  is_debit: boolean;
-  cgst_amount?: number | null;
-  sgst_amount?: number | null;
-  igst_amount?: number | null;
-  tds_amount?: number | null;
-  gst_treatment_type?: string | null;
-  created_at?: Date;
+  isDebit: boolean;
+  cgstAmount?: number | null;
+  sgstAmount?: number | null;
+  igstAmount?: number | null;
+  tdsAmount?: number | null;
+  gstTreatmentType?: string | null;
+  createdAt?: Date;
+  ledgerName?: string;
+}
+
+function mapVoucherEntryRow(row: any): VoucherEntryRow {
+  if (!row) return row;
+  return {
+    id: row.id,
+    voucherId: row.voucher_id,
+    ledgerId: row.ledger_id,
+    amount: parseFloat(row.amount || '0'),
+    isDebit: row.is_debit,
+    cgstAmount: row.cgst_amount ? parseFloat(row.cgst_amount) : undefined,
+    sgstAmount: row.sgst_amount ? parseFloat(row.sgst_amount) : undefined,
+    igstAmount: row.igst_amount ? parseFloat(row.igst_amount) : undefined,
+    tdsAmount: row.tds_amount ? parseFloat(row.tds_amount) : undefined,
+    gstTreatmentType: row.gst_treatment_type,
+    createdAt: row.created_at,
+    ledgerName: row.ledger_name
+  };
 }
 
 /**
@@ -35,12 +73,26 @@ interface VoucherEntryRow {
  */
 export class VoucherRepository {
   /**
+   * Get the next sequence number for a voucher type within a financial year.
+   */
+  static async getNextSequence(
+    client: DbClient,
+    companyId: string,
+    voucherType: string,
+    financialYear: string
+  ): Promise<number> {
+    const query = `
+      SELECT COUNT(*) as count 
+      FROM vouchers 
+      WHERE company_id = $1 AND voucher_type = $2 AND financial_year = $3
+    `;
+    const result: DbQueryResult<{ count: string }> = await client.query(query, [companyId, voucherType, financialYear]);
+    const count = parseInt(result.rows[0]?.count ?? '0', 10);
+    return count + 1;
+  }
+
+  /**
    * Save a voucher with its entries.
-   * Assumes the client is already a transaction client when called from service layer.
-   * @param client - PostgreSQL client (should be a transaction client)
-   * @param companyId - Company ID for multi-tenancy
-   * @param voucher - Voucher object containing voucherNumber, voucherType, date, effectiveDate, narration, entries
-   * @returns Saved voucher with its entries (including generated IDs)
    */
   static async saveVoucher(
     client: DbClient,
@@ -48,8 +100,9 @@ export class VoucherRepository {
     voucher: {
       voucherNumber: string;
       voucherType: string;
-      date: string; // Assuming date string
-      effectiveDate: string; // Assuming date string
+      date: string; 
+      effectiveDate: string; 
+      financialYear: string;
       narration?: string | null;
       entries: Array<{
         ledgerId: string;
@@ -63,7 +116,6 @@ export class VoucherRepository {
       }>
     }
   ): Promise<{ voucher: VoucherRow; entries: VoucherEntryRow[] }> {
-    // Calculate totals from entries
     const totalDebit = voucher.entries
       .filter(entry => entry.isDebit)
       .reduce((sum, entry) => sum + entry.amount, 0);
@@ -71,12 +123,12 @@ export class VoucherRepository {
       .filter(entry => !entry.isDebit)
       .reduce((sum, entry) => sum + entry.amount, 0);
 
-    // Insert voucher
     const voucherQuery = `
       INSERT INTO vouchers (
-        company_id, voucher_number, voucher_type, date, effective_date, narration, total_debit, total_credit
+        company_id, voucher_number, voucher_type, date, effective_date, 
+        narration, total_debit, total_credit, financial_year
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
     const voucherValues = [
@@ -87,19 +139,20 @@ export class VoucherRepository {
       voucher.effectiveDate,
       voucher.narration ?? null,
       totalDebit,
-      totalCredit
+      totalCredit,
+      voucher.financialYear
     ];
-    const voucherResult: DbQueryResult<VoucherRow> = await client.query(voucherQuery, voucherValues);
+    const voucherResult: DbQueryResult<any> = await client.query(voucherQuery, voucherValues);
     const savedVoucher = voucherResult.rows[0];
     if (!savedVoucher) {
       throw new Error('Failed to create voucher');
     }
 
-    // Insert each entry
     const entryPromises = voucher.entries.map(async (entry) => {
       const entryQuery = `
         INSERT INTO voucher_entries (
-          voucher_id, ledger_id, amount, is_debit, cgst_amount, sgst_amount, igst_amount, tds_amount, gst_treatment_type
+          voucher_id, ledger_id, amount, is_debit, 
+          cgst_amount, sgst_amount, igst_amount, tds_amount, gst_treatment_type
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
@@ -115,54 +168,43 @@ export class VoucherRepository {
         entry.tdsAmount ?? null,
         entry.gstTreatmentType ?? null
       ];
-      const entryResult: DbQueryResult<VoucherEntryRow> = await client.query(entryQuery, entryValues);
+      const entryResult: DbQueryResult<any> = await client.query(entryQuery, entryValues);
       const savedEntry = entryResult.rows[0];
       if (!savedEntry) {
         throw new Error('Failed to create voucher entry');
       }
-      return savedEntry;
+      return mapVoucherEntryRow(savedEntry);
     });
 
     const savedEntries = await Promise.all(entryPromises);
 
-    return { voucher: savedVoucher, entries: savedEntries };
+    return { voucher: mapVoucherRow(savedVoucher), entries: savedEntries };
   }
 
-  /**
-   * Find a voucher by ID and company ID, with its entries.
-   * @param client - PostgreSQL client (pool or transaction client)
-   * @param companyId - Company ID
-   * @param voucherId - Voucher ID
-   * @returns Voucher with entries if found, null otherwise
-   */
   static async findById(
     client: DbClient,
     companyId: string,
     voucherId: string
   ): Promise<{ voucher: VoucherRow; entries: VoucherEntryRow[] } | null> {
-    // Get voucher
     const voucherQuery = 'SELECT * FROM vouchers WHERE id = $1 AND company_id = $2';
-    const voucherResult: DbQueryResult<VoucherRow> = await client.query(voucherQuery, [voucherId, companyId]);
+    const voucherResult: DbQueryResult<any> = await client.query(voucherQuery, [voucherId, companyId]);
     const voucher = voucherResult.rows[0];
     if (!voucher) {
       return null;
     }
 
-    // Get entries
-    const entriesQuery = 'SELECT * FROM voucher_entries WHERE voucher_id = $1';
-    const entriesResult: DbQueryResult<VoucherEntryRow> = await client.query(entriesQuery, [voucherId]);
-    const entries = entriesResult.rows;
+    const entriesQuery = `
+      SELECT ve.*, l.name as ledger_name 
+      FROM voucher_entries ve
+      JOIN ledgers l ON ve.ledger_id = l.id
+      WHERE ve.voucher_id = $1
+    `;
+    const entriesResult: DbQueryResult<any> = await client.query(entriesQuery, [voucherId]);
+    const entries = entriesResult.rows.map(mapVoucherEntryRow);
 
-    return { voucher, entries };
+    return { voucher: mapVoucherRow(voucher), entries };
   }
 
-  /**
-   * Find vouchers by company ID with optional filters.
-   * @param client - PostgreSQL client (pool or transaction client)
-   * @param companyId - Company ID
-   * @param filters - Optional filters (fromDate, toDate, type)
-   * @returns Array of vouchers with their entries
-   */
   static async findByCompany(
     client: DbClient,
     companyId: string,
@@ -170,9 +212,9 @@ export class VoucherRepository {
       fromDate?: string | Date;
       toDate?: string | Date;
       type?: string;
+      financialYear?: string;
     }
   ): Promise<Array<{ voucher: VoucherRow; entries: VoucherEntryRow[] }>> {
-    // Build WHERE clause
     const whereConditions = ['v.company_id = $1'];
     const values: any[] = [companyId];
     let paramIndex = 2;
@@ -189,35 +231,36 @@ export class VoucherRepository {
       whereConditions.push(`v.voucher_type = $${paramIndex++}`);
       values.push(filters.type);
     }
+    if (filters?.financialYear) {
+      whereConditions.push(`v.financial_year = $${paramIndex++}`);
+      values.push(filters.financialYear);
+    }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-    // Get vouchers
     const voucherQuery = `
       SELECT v.* FROM vouchers v
       ${whereClause}
       ORDER BY v.date DESC, v.created_at DESC
     `;
-    const voucherResult: DbQueryResult<VoucherRow> = await client.query(voucherQuery, values);
+    const voucherResult: DbQueryResult<any> = await client.query(voucherQuery, values);
     const vouchers = voucherResult.rows;
 
-    // For each voucher, get its entries
     const voucherWithEntriesPromises = vouchers.map(async (voucher) => {
-      const entriesQuery = 'SELECT * FROM voucher_entries WHERE voucher_id = $1';
-      const entriesResult: DbQueryResult<VoucherEntryRow> = await client.query(entriesQuery, [voucher.id]);
-      const entries = entriesResult.rows;
-      return { voucher, entries };
+      const entriesQuery = `
+        SELECT ve.*, l.name as ledger_name 
+        FROM voucher_entries ve
+        JOIN ledgers l ON ve.ledger_id = l.id
+        WHERE ve.voucher_id = $1
+      `;
+      const entriesResult: DbQueryResult<any> = await client.query(entriesQuery, [voucher.id]);
+      const entries = entriesResult.rows.map(mapVoucherEntryRow);
+      return { voucher: mapVoucherRow(voucher), entries };
     });
 
     return await Promise.all(voucherWithEntriesPromises);
   }
 
-  /**
-   * Delete a voucher by ID and company ID (cascade will delete entries).
-   * @param client - PostgreSQL client (pool or transaction client)
-   * @param companyId - Company ID
-   * @param voucherId - Voucher ID
-   */
   static async deleteVoucher(
     client: DbClient,
     companyId: string,
@@ -225,6 +268,5 @@ export class VoucherRepository {
   ): Promise<void> {
     const query = 'DELETE FROM vouchers WHERE id = $2 AND company_id = $1';
     await client.query(query, [companyId, voucherId]);
-    // Note: Assuming foreign key with ON DELETE CASCADE on voucher_entries
   }
 }

@@ -1,9 +1,9 @@
 export interface IGSTCalculationInput {
   voucherType: 'Sales' | 'Purchase' | 'Debit Note' | 'Credit Note';
-  companyState: string;
+  companyStateId: string;
   companyGSTIN: string;
   companyRegistrationType: 'Regular' | 'Composition' | 'Unregistered';
-  partyState: string;
+  partyStateId: string;
   partyGSTIN?: string;
   partyRegistrationType: 'Regular' | 'Composition' | 'Unregistered' | 'Consumer';
   taxableAmount: number;
@@ -14,12 +14,10 @@ export interface IGSTCalculationInput {
 
 export interface IGSTCalculationOutput {
   entries: {
-    ledgerName: string; // This is the name of the ledger, e.g., "Output CGST"
+    ledgerName: string; 
     amount: number;
     isDebit: boolean;
     narration?: string;
-    // We will also include the tax breakdown for the entry, but note: each entry is for a specific tax head.
-    // So we can have:
     cgstAmount?: number;
     sgstAmount?: number;
     igstAmount?: number;

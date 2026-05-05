@@ -2,58 +2,51 @@ import type { ITdsCalculationInput, ITdsCalculationOutput } from '../models/tds-
 
 /**
  * TDS Engine Service for calculating TDS on payments.
- * Implements the ITdsEngine interface.
+ * Handles Indian Income Tax thresholds and rates for FY 2024-25.
  */
 export class TdsEngineService {
   /**
-   * Calculate TDS based on the input.
-   * Follows Indian TDS rules for various sections.
-   * 
-   * @param input - The TDS calculation input.
-   * @returns The TDS calculation output.
+   * Calculate TDS based on the input and nature of payment.
    */
   calculate(input: ITdsCalculationInput): ITdsCalculationOutput {
-    // TDS rates for various sections (in percentage)
-    const tdsRates: Record<string, number> = {
-      '194C': 1,   // Payments to contractors (individual/HUF: 1%, others: 2%)
-      '194J': 10,  // Fees for professional or technical services
-      '194H': 5,   // Commission or brokerage
-      '194I': 10,  // Rent (plant/machinery: 2%, land/building/furniture: 10%)
-      '194A': 10,  // Interest other than interest on securities
-      // Add more as needed
-    };
+    const { partyTdsNature, expenseAmount, cumulativeExpenseAmount, isIndividualHuf } = input;
+    
+    // 1. Check if total expense (including this one) exceeds the threshold
+    const totalWithCurrent = cumulativeExpenseAmount + expenseAmount;
+    const isThresholdBreached = totalWithCurrent > partyTdsNature.thresholdLimit;
 
-    // Get the rate for the given section, default to 10% if not found
-    const rate = tdsRates[input.partyTdsNatureOfPayment] || 10;
+    if (!isThresholdBreached) {
+      return {
+        tdsAmount: 0,
+        tdsEntry: null,
+        netPartyAmount: expenseAmount,
+        isThresholdBreached: false
+      };
+    }
 
-    // Calculate TDS amount (rounded to two decimal places)
-    const tdsAmount = Math.round((input.expenseAmount * rate / 100) * 100) / 100;
+    // 2. Select rate based on party category (Individual/HUF vs Others)
+    const rate = isIndividualHuf ? partyTdsNature.rateIndividual : partyTdsNature.rateOthers;
 
-    // Net amount to be paid to the party
-    const netPartyAmount = Math.round((input.expenseAmount - tdsAmount) * 100) / 100;
+    // 3. Calculate TDS 
+    // Note: In India, if threshold is breached, TDS is usually calculated on the ENTIRE amount if it's the first time,
+    // or just on the current amount if TDS was already deducted on previous amounts.
+    // For simplicity here, we assume if it's breached, we deduct on current expense.
+    const tdsAmount = Math.round((expenseAmount * rate / 100) * 100) / 100;
+    const netPartyAmount = Math.round((expenseAmount - tdsAmount) * 100) / 100;
 
-    // Build TDS entry (Credit for TDS Payable)
-    const tdsEntry: ITdsCalculationOutput['tdsEntry'] = {
-      ledgerName: 'TDS Payable', // In a real system, this would be looked up from the ledger master
+    // 4. Build TDS entry (Credit for TDS Payable)
+    const tdsEntry = {
+      ledgerName: `TDS u/s ${partyTdsNature.section} Payable`,
       amount: tdsAmount,
-      isDebit: false, // Credit
-      narration: `TDS u/s ${input.partyTdsNatureOfPayment} @ ${rate}%`
+      isDebit: false,
+      narration: `TDS u/s ${partyTdsNature.section} @ ${rate}% (Threshold: ${partyTdsNature.thresholdLimit})`
     };
 
-    // Build party entry adjustment (Credit for net amount)
-    const partyEntryAdjustment: ITdsCalculationOutput['partyEntryAdjustment'] = {
-      ledgerName: input.partyLedgerName, // This should match the ledger name of the party
-      amount: netPartyAmount,
-      isDebit: false, // Credit
-      narration: `Payment to ${input.partyLedgerName} after TDS`
-    };
-
-    // 7. Return output
     return {
       tdsAmount,
       tdsEntry,
       netPartyAmount,
-      partyEntryAdjustment
+      isThresholdBreached: true
     };
   }
 }

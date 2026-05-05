@@ -8,8 +8,10 @@ import Navigation from "@/components/Navigation";
 import NoiseOverlay from "@/components/ui/NoiseOverlay";
 import ThemeProvider from "@/components/ThemeProvider";
 import ClientLayout from "@/components/ClientLayout";
+import SmoothScroll from "@/components/ui/SmoothScroll";
 
 import GlobalClientComponents from "@/components/GlobalClientComponents";
+import AuthGuard from "@/components/AuthGuard";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -22,11 +24,25 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Braj Accounting | Modern Ledger Management",
-  description: "Breathtakingly beautiful cloud accounting for the modern age.",
+  title: "Braj Quantum Ledger | Structural Financial Intelligence",
+  description: "The world's most advanced, monochromatic accounting ecosystem for institutional-grade financial oversight.",
+  keywords: ["accounting", "quantum ledger", "financial intelligence", "GST", "enterprise", "spatial finance"],
+  authors: [{ name: "Braj Quantum" }],
+  openGraph: {
+    title: "Braj Quantum Ledger",
+    description: "Institutional-grade spatial accounting. The end of grid view.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Braj Quantum Ledger",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Braj Quantum Ledger",
+    description: "Institutional-grade spatial accounting. The end of grid view.",
+  },
+  robots: { index: true, follow: true },
 };
 
-// Final stable build of RootLayout
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,8 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased selection:bg-violet-500/30 min-h-full flex flex-col bg-background text-foreground`}>
-        {/* Theme script to prevent flicker */}
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased selection:bg-white/20 min-h-full flex flex-col bg-background text-foreground cursor-none`}>
         <Script
           id="theme-switcher"
           strategy="beforeInteractive"
@@ -63,21 +78,30 @@ export default function RootLayout({
         />
         <Providers>
           <ThemeProvider>
-            <NoiseOverlay />
-            <GlobalClientComponents />
-            <Navigation />
-            <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
-              <ClientLayout>
-                {children}
-              </ClientLayout>
-            </main>
-            
-            <footer className="relative z-10 py-6 text-center no-print">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-premium border-white/5 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Braj Accounting Engine v1.0.4 • Stable
-              </div>
-            </footer>
+            <SmoothScroll>
+              <NoiseOverlay />
+              <GlobalClientComponents />
+              <Navigation />
+              <main className="flex-1 relative z-10">
+                <AuthGuard>
+                  <ClientLayout>
+                    {children}
+                  </ClientLayout>
+                </AuthGuard>
+              </main>
+              
+              <footer className="relative z-10 py-12 text-center no-print">
+                <div className="inline-flex flex-col items-center gap-4">
+                  <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass-pro border border-white/5 text-[10px] text-white/40 uppercase tracking-[0.3em] font-black">
+                    <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" />
+                    Quantum Ledger Core &mdash; v2.0.0
+                  </div>
+                  <p className="text-[10px] text-white/10 uppercase tracking-[0.5em] font-black">
+                    Institutional Intelligence &bull; Verified Structural Equilibrium
+                  </p>
+                </div>
+              </footer>
+            </SmoothScroll>
           </ThemeProvider>
         </Providers>
       </body>
