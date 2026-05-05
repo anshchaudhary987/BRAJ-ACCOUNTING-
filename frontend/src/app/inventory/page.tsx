@@ -144,22 +144,22 @@ export default function InventoryPage() {
                         <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-1">Stock Level</div>
                         <div className={cn(
                           "text-2xl font-black",
-                          item.current_stock < 10 ? "text-red-400" : "text-white"
+                          item.currentStock < 10 ? "text-red-400" : "text-white"
                         )}>
-                          {item.current_stock} <span className="text-xs font-bold text-white/20 uppercase ml-1">{item.unit_symbol}</span>
+                          {item.currentStock} <span className="text-xs font-bold text-white/20 uppercase ml-1">{item.unitSymbol}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="relative z-10">
                       <h3 className="text-xl font-bold text-white mb-1 group-hover:translate-x-1 transition-transform tracking-tight">{item.name}</h3>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">{item.group_name || 'Uncategorized'}</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">{item.groupName || 'Uncategorized'}</p>
                     </div>
 
                     <div className="mt-8 grid grid-cols-2 gap-4 relative z-10">
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
                         <div className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-1">Valuation</div>
-                        <div className="text-sm font-bold text-white/60">₹{item.opening_rate} / {item.unit_symbol}</div>
+                        <div className="text-sm font-bold text-white/60">₹{item.openingRate} / {item.unitSymbol}</div>
                       </div>
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
                         <div className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-1">SKU Identity</div>
@@ -167,7 +167,7 @@ export default function InventoryPage() {
                       </div>
                     </div>
 
-                    {item.current_stock < 10 && (
+                    {item.currentStock < 10 && (
                       <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-red-400/5 border border-red-400/20 text-red-400 text-[10px] font-black uppercase tracking-widest relative z-10">
                         <AlertTriangle size={12} />
                         Structural Depletion Detected
