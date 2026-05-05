@@ -14,7 +14,7 @@ export function generateNarration({ voucherType, entries, ledgers, date }: Narra
   }
 
   const getLedger = (id: string) => ledgers.find(l => l.id === id);
-  const getGroupName = (id: string) => getLedger(id)?.group_name || '';
+  const getGroupName = (id: string) => getLedger(id)?.groupName || '';
 
   const isCashBank = (id: string) => {
     const group = getGroupName(id);

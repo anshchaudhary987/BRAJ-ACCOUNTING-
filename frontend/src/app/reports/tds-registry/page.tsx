@@ -17,7 +17,8 @@ import {
   Zap,
   Lock,
   Target,
-  FileCode
+  FileCode,
+  ChevronRight
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useTenancy } from '@/hooks/useTenancy';

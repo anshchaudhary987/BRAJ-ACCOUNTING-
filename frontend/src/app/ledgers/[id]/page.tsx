@@ -21,7 +21,8 @@ import {
   Database,
   Search,
   Activity,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -61,9 +62,9 @@ function LedgerStatementContent() {
         if (e.ledgerId === id) {
           entries.push({
             date: v.date,
-          vchNo: v.voucherNumber,
+            vchNo: v.voucherNumber,
             vchType: v.voucherType,
-                        narration: v.narration,
+            narration: v.narration,
             isDebit: e.isDebit,
             amount: Number(e.amount),
             id: e.id,
@@ -140,7 +141,7 @@ function LedgerStatementContent() {
                 Spatial Statement Analysis
               </span>
               <div className="h-px w-12 bg-white/20" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Jurisdiction: {ledger.state_name || 'Generic'}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Jurisdiction: {ledger.stateName || 'Generic'}</span>
             </div>
             <h1 className="text-8xl font-bold tracking-tighter text-white leading-none">
               {ledger.name.split(' ').map((w, i) => i === 0 ? w : <span key={i} className="text-white/20 italic"> {w}</span>)}

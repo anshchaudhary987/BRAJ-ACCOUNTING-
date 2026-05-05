@@ -23,7 +23,8 @@ import {
   Globe,
   Database,
   ArrowUpRight,
-  ChevronRight
+  ChevronRight,
+  LayoutGrid
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -308,7 +309,7 @@ function LedgerForm({ groups, onSubmit, loading }: { groups: LedgerGroup[], onSu
     const validation = ledgerSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
-      validation.error.errors.forEach((err) => {
+      validation.error.issues.forEach((err) => {
         if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
@@ -446,7 +447,7 @@ function LedgerForm({ groups, onSubmit, loading }: { groups: LedgerGroup[], onSu
             </label>
             <HsnSelect 
               value={formData.hsnCodeId} 
-              onChange={(val) => setFormData({...formData, hsnCodeId: val})} 
+              onChange={(val) => setFormData({...formData, hsnCodeId: val || ''})} 
             />
           </div>
 

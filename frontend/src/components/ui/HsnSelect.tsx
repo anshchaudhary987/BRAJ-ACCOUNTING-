@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
+import { motion } from 'framer-motion';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react';
 import { Check, ChevronsUpDown, Loader2, Hash, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,7 +11,7 @@ import { HSN, ApiResponse } from '@/types';
 
 interface HsnSelectProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
   className?: string;
   placeholder?: string;
 }
@@ -109,7 +110,7 @@ const HsnSelect = memo(({
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                           <span className="text-[10px] font-black bg-white/5 px-2 py-1 rounded-md text-white/40 uppercase tracking-tighter">
-                            GST {c.gst_rate}%
+                            GST {c.gstRate}%
                           </span>
                           {selected && <Check className="h-4 w-4 text-white mt-2" />}
                         </div>

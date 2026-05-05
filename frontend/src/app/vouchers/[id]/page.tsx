@@ -21,7 +21,8 @@ import {
   ArrowUpRight,
   BadgePercent,
   CheckCircle2,
-  Command
+  Command,
+  ShieldAlert
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -101,9 +102,9 @@ function VoucherDetailContent() {
   }
 
   const taxComponents = {
-    cgst: voucher.entries.reduce((s, e) => s + Number(e.cgstAmount || 0), 0),
-    sgst: voucher.entries.reduce((s, e) => s + Number(e.sgstAmount || 0), 0),
-    igst: voucher.entries.reduce((s, e) => s + Number(e.igstAmount || 0), 0),
+    cgst: voucher.entries.reduce((s: number, e: any) => s + Number(e.cgstAmount || 0), 0),
+    sgst: voucher.entries.reduce((s: number, e: any) => s + Number(e.sgstAmount || 0), 0),
+    igst: voucher.entries.reduce((s: number, e: any) => s + Number(e.igstAmount || 0), 0),
   };
   const hasTax = Object.values(taxComponents).some(v => v > 0);
 
@@ -155,7 +156,7 @@ function VoucherDetailContent() {
               { label: 'Temporal Signature', value: voucher.date, icon: Calendar, color: 'text-white' },
               { label: 'Registry ID', value: voucher.vchNo, icon: Hash, color: 'text-emerald-400' },
               { label: 'Origin Node', value: selectedCompany?.name || 'BRAJ_QUANTUM', icon: Building2, color: 'text-white' }
-            ].map((stat, i) => (
+            ].map((stat: any, i: number) => (
               <div key={i} className="p-10 glass-pro rounded-[3.5rem] border border-white/5 bg-gradient-to-br from-white/[0.04] to-transparent shadow-xl">
                 <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                   <stat.icon size={12} /> {stat.label}
@@ -176,7 +177,7 @@ function VoucherDetailContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03] print:divide-black">
-                {voucher.entries.map((entry, idx) => {
+                {voucher.entries.map((entry: any, idx: number) => {
                   const ledger = getLedger(entry.ledgerId);
                   return (
                     <tr key={idx} className="group hover:bg-white/[0.03] transition-all duration-500">
@@ -192,7 +193,7 @@ function VoucherDetailContent() {
                               {ledger?.name || entry.ledgerId}
                             </p>
                             <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mt-2 group-hover:text-white/40 transition-colors print:text-gray-500">
-                              REF: {entry.ledgerId.slice(0, 8)} | JURISDICTION: {ledger?.state_name || 'GENERIC'}
+                              REF: {entry.ledgerId.slice(0, 8)} | JURISDICTION: {ledger?.stateName || 'GENERIC'}
                             </p>
                           </div>
                         </div>

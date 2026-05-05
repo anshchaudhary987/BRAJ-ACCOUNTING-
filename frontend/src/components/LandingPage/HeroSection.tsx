@@ -77,7 +77,7 @@ const OrbitalRing = memo(({ radius, speed, tilt, opacity }: {
   });
 
   return (
-    <line ref={ref} geometry={geometry}>
+    <line {...({ ref, geometry } as any)}>
       <lineBasicMaterial color="#ffffff" transparent opacity={opacity} depthWrite={false} />
     </line>
   );
@@ -270,7 +270,7 @@ const itemVariants = {
   hidden: { opacity: 0, y: 60, filter: 'blur(10px)' },
   visible: {
     opacity: 1, y: 0, filter: 'blur(0px)',
-    transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 1, ease: [0.16, 1, 0.3, 1] as any },
   },
 };
 

@@ -31,7 +31,7 @@ const LedgerCombobox = memo(({
     const lowerQuery = query.toLowerCase();
     return ledgers.filter((ledger) => {
       return ledger.name.toLowerCase().includes(lowerQuery) ||
-             ledger.group_name.toLowerCase().includes(lowerQuery);
+             ledger.groupName.toLowerCase().includes(lowerQuery);
     });
   }, [query, ledgers]);
 
@@ -97,7 +97,7 @@ const LedgerCombobox = memo(({
                             {ledger.name}
                           </span>
                           <span className={cn("block truncate text-xs", focus ? "text-violet-200" : "text-muted-foreground")}>
-                            {ledger.group_name}
+                            {ledger.groupName}
                           </span>
                         </div>
                         {selected ? (

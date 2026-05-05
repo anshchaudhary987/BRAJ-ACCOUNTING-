@@ -103,7 +103,7 @@ const Navigation = memo(() => {
                   <Building2 size={16} className="text-white/60" />
                   <div className="text-left hidden sm:block">
                     <p className="text-xs font-bold leading-none text-white">{selectedCompany.name}</p>
-                    <p className="text-[10px] text-white/40">{selectedCompany.state}</p>
+                    <p className="text-[10px] text-white/40">{selectedCompany.stateName}</p>
                   </div>
                   <ChevronDown size={14} className="text-white/20" />
                 </button>

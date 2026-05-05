@@ -16,7 +16,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
         infinite: false,
       }}
     >
-      {children}
+      {children as any}
     </ReactLenis>
   );
 }

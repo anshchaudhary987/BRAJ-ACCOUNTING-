@@ -70,8 +70,8 @@ function ActivitySidebarComponent() {
       items.push({
         id: v.id,
         type: 'voucher',
-        title: `${v.vchType} Voucher`,
-        subtitle: `Vch No: ${v.vchNo}`,
+        title: `${v.voucherType} Voucher`,
+        subtitle: `Vch No: ${v.voucherNumber}`,
         timestamp: new Date(v.createdAt || v.date),
         link: `/vouchers/${v.id}`,
       });

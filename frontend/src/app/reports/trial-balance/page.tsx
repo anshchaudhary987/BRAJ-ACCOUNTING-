@@ -17,11 +17,13 @@ import {
   ArrowRightLeft,
   Database,
   ArrowUpRight,
+  ArrowDownRight,
   ShieldAlert,
   Fingerprint,
   Activity,
   History,
-  Command
+  Command,
+  Search
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';

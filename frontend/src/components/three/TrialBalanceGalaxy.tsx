@@ -88,11 +88,11 @@ export default function TrialBalanceGalaxy({ data, ledgers }: TrialBalanceGalaxy
       const ledger = ledgers.find(l => l.id === item.ledgerId);
       return {
         ...item,
-        groupName: ledger?.group_name || 'Other',
+        groupName: ledger?.groupName || 'Other',
         // We'll estimate group type based on name for now if not available
-        groupType: ledger?.group_name?.match(/Sales|Income|Other Income/i) ? 'Income' :
-                   ledger?.group_name?.match(/Purchases|Expenses|Charges|Expenditure/i) ? 'Expenditure' :
-                   ledger?.group_name?.match(/Cash|Bank|Debtors|Assets/i) ? 'Assets' : 'Liabilities'
+        groupType: ledger?.groupName?.match(/Sales|Income|Other Income/i) ? 'Income' :
+                   ledger?.groupName?.match(/Purchases|Expenses|Charges|Expenditure/i) ? 'Expenditure' :
+                   ledger?.groupName?.match(/Cash|Bank|Debtors|Assets/i) ? 'Assets' : 'Liabilities'
       };
     });
 
@@ -143,12 +143,12 @@ export default function TrialBalanceGalaxy({ data, ledgers }: TrialBalanceGalaxy
       </Float>
       
       {/* Background Star Particles */}
-      <Points count={500} />
+      <GalaxyPoints count={500} />
     </group>
   );
 }
 
-function Points({ count = 500 }) {
+function GalaxyPoints({ count = 500 }) {
   const points = useMemo(() => {
     const p = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {

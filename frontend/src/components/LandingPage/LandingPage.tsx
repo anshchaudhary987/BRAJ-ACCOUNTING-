@@ -163,7 +163,7 @@ const FeatureCard = memo(({ icon: Icon, title, description, delay = 0 }: any) =>
     initial={{ opacity: 0, y: 50 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: '-80px' }}
-    transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+    transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as any }}
   >
     <TiltCard className="h-full">
       <div className="glass-pro p-8 sm:p-12 md:p-14 rounded-[2rem] sm:rounded-[3rem] border border-white/5 flex flex-col gap-6 sm:gap-8 group hover:border-white/20 transition-all duration-700 bg-gradient-to-br from-white/[0.04] to-transparent shadow-2xl relative overflow-hidden will-change-auto h-full">
@@ -234,13 +234,13 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] as any }}
               className="text-center md:text-left group cursor-default"
             >
               <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-white/25 mb-4 sm:mb-6 group-hover:text-white/60 transition-colors duration-500">{stat.label}</p>
               <h4 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter text-white mb-3 sm:mb-4">
                 {'value' in stat ? (
-                  <CountUp target={stat.value} suffix={stat.suffix} prefix={stat.prefix || ''} decimals={stat.decimals} />
+                  <CountUp target={stat.value!} suffix={stat.suffix} prefix={stat.prefix || ''} decimals={stat.decimals} />
                 ) : (
                   <motion.span initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
                     {stat.staticVal}
@@ -317,7 +317,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] as any }}
             className="flex justify-center max-w-2xl mx-auto origin-center"
           >
             <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
@@ -331,7 +331,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as any }}
           className="glass-pro p-10 sm:p-16 md:p-40 rounded-[2rem] sm:rounded-[4rem] md:rounded-[6rem] border border-white/10 relative overflow-hidden bg-gradient-to-b from-white/[0.06] to-black shadow-[0_0_100px_rgba(255,255,255,0.04)]"
         >
           <div className="absolute inset-0 pointer-events-none">

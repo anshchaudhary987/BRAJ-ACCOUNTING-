@@ -27,3 +27,14 @@ export function mapKeysToSnakeCase(obj: Record<string, any>): Record<string, any
   }
   return result;
 }
+
+/**
+ * Maps keys of an object to camelCase.
+ */
+export function mapKeysToCamelCase(obj: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key in obj) {
+    result[toCamelCase(key)] = obj[key];
+  }
+  return result;
+}

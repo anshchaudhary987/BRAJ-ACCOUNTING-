@@ -28,7 +28,7 @@ export default function CashFlowChart() {
 
   // Identify Cash/Bank ledgers
   const cashBankLedgerIds = ledgers
-    .filter(l => l.group_name === 'Cash' || l.group_name === 'Bank Accounts')
+    .filter(l => l.groupName === 'Cash' || l.groupName === 'Bank Accounts')
     .map(l => l.id);
 
   // Generate last 7 days data
