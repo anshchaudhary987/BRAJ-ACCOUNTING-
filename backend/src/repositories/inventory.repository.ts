@@ -19,39 +19,72 @@ export class InventoryRepository {
   static async listUnits(client: DbClient, companyId: string) {
     const query = 'SELECT * FROM units WHERE company_id = $1';
     const result: DbQueryResult<any> = await client.query(query, [companyId]);
-    return result.rows;
+    return result.rows.map(row => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      symbol: row.symbol
+    }));
   }
 
   static async createUnit(client: DbClient, companyId: string, name: string, symbol: string) {
     const query = 'INSERT INTO units (id, company_id, name, symbol) VALUES ($1, $2, $3, $4) RETURNING *';
     const result: DbQueryResult<any> = await client.query(query, [uuidv4(), companyId, name, symbol]);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      symbol: row.symbol
+    };
   }
 
   // ─── Godowns ───
   static async listGodowns(client: DbClient, companyId: string) {
     const query = 'SELECT * FROM godowns WHERE company_id = $1';
     const result: DbQueryResult<any> = await client.query(query, [companyId]);
-    return result.rows;
+    return result.rows.map(row => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      location: row.location
+    }));
   }
 
   static async createGodown(client: DbClient, companyId: string, name: string, location?: string) {
     const query = 'INSERT INTO godowns (id, company_id, name, location) VALUES ($1, $2, $3, $4) RETURNING *';
     const result: DbQueryResult<any> = await client.query(query, [uuidv4(), companyId, name, location]);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      location: row.location
+    };
   }
 
   // ─── Stock Groups ───
   static async listStockGroups(client: DbClient, companyId: string) {
     const query = 'SELECT * FROM stock_groups WHERE company_id = $1';
     const result: DbQueryResult<any> = await client.query(query, [companyId]);
-    return result.rows;
+    return result.rows.map(row => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      parentId: row.parent_id
+    }));
   }
 
   static async createStockGroup(client: DbClient, companyId: string, name: string, parentId?: string) {
     const query = 'INSERT INTO stock_groups (id, company_id, name, parent_id) VALUES ($1, $2, $3, $4) RETURNING *';
     const result: DbQueryResult<any> = await client.query(query, [uuidv4(), companyId, name, parentId]);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      parentId: row.parent_id
+    };
   }
 
   // ─── Stock Items ───
@@ -64,7 +97,19 @@ export class InventoryRepository {
       WHERE si.company_id = $1
     `;
     const result: DbQueryResult<any> = await client.query(query, [companyId]);
-    return result.rows;
+    return result.rows.map(row => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      sku: row.sku,
+      stockGroupId: row.stock_group_id,
+      unitId: row.unit_id,
+      openingStock: parseFloat(row.opening_stock || '0'),
+      openingRate: parseFloat(row.opening_rate || '0'),
+      currentStock: parseFloat(row.current_stock || '0'),
+      unitSymbol: row.unit_symbol,
+      groupName: row.group_name
+    }));
   }
 
   static async createStockItem(client: DbClient, companyId: string, item: any) {
@@ -77,7 +122,18 @@ export class InventoryRepository {
       uuidv4(), companyId, item.name, item.sku, item.stockGroupId, item.unitId,
       item.openingStock || 0, item.openingRate || 0, item.openingStock || 0
     ]);
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      sku: row.sku,
+      stockGroupId: row.stock_group_id,
+      unitId: row.unit_id,
+      openingStock: parseFloat(row.opening_stock || '0'),
+      openingRate: parseFloat(row.opening_rate || '0'),
+      currentStock: parseFloat(row.current_stock || '0')
+    };
   }
 
   // ─── Stock Journals ───
@@ -119,12 +175,12 @@ export class InventoryRepository {
       const totalAmount = journal.entries.reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
       
       const voucherData = {
+        voucherNumber: `SJ-${Date.now()}`, // Fallback voucher number
         voucherType: journal.journalType === 'Receipt' ? 'Journal' : 'Journal',
         date: journal.date,
-        narration: `Auto-posted from Stock Journal: ${journal.narration || ''}`,
-        totalDebit: totalAmount,
-        totalCredit: totalAmount,
+        effectiveDate: journal.date,
         financialYear: journal.financialYear || '2024-25',
+        narration: `Auto-posted from Stock Journal: ${journal.narration || ''}`,
         entries: [
           {
             ledgerId: journal.journalType === 'Receipt' ? journal.stockLedgerId : journal.ledgerId,
