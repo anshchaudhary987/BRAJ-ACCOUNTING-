@@ -18,13 +18,13 @@ export class AuthController {
     try {
       const existingUser = await UserRepository.findByEmail(pool, email);
       if (existingUser) {
-        return res.status(400).json({ error: 'User already exists with this email' });
+        return res.status(400).json({ error: 'Account already exists with this email' });
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
       const user = await UserRepository.createUserWithPassword(pool, name, email, passwordHash);
       if (!user) {
-        return res.status(500).json({ error: 'Failed to create user' });
+        return res.status(500).json({ error: 'Failed to create user record in database' });
       }
 
       // Generate token
@@ -38,9 +38,12 @@ export class AuthController {
         user: { id: user.id, name: user.name, email: user.email, isActive: user.isActive },
         token
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Signup error:', err);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ 
+        error: 'Registration failed due to server error', 
+        details: err.message 
+      });
     }
   }
 
@@ -53,13 +56,17 @@ export class AuthController {
 
     try {
       const user = await UserRepository.findByEmail(pool, email);
-      if (!user || !user.passwordHash) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+      if (!user) {
+        return res.status(401).json({ error: 'No account found with this email' });
+      }
+
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: 'Account not set up for password login' });
       }
 
       const isMatch = await bcrypt.compare(password, user.passwordHash);
       if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Incorrect password' });
       }
 
       const token = jwt.sign(
@@ -72,9 +79,12 @@ export class AuthController {
         user: { id: user.id, name: user.name, email: user.email, isActive: user.isActive },
         token
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ 
+        error: 'Login failed due to server error', 
+        details: err.message 
+      });
     }
   }
 

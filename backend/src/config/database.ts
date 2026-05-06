@@ -15,8 +15,10 @@ let dbType: 'postgres' | 'sqlite' = 'postgres';
 let pool: any = null;
 let sqlite: any = null;
 
-// Vercel Postgres provides POSTGRES_URL or DATABASE_URL
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+// Vercel Postgres provides multiple env variants
+const connectionString = process.env.DATABASE_URL || 
+                         process.env.POSTGRES_URL || 
+                         process.env.POSTGRES_URL_NON_POOLING;
 
 if (!connectionString || !connectionString.startsWith('postgresql')) {
   console.log('PostgreSQL not configured or URL invalid. Falling back to SQLite.');
@@ -29,17 +31,21 @@ if (dbType === 'postgres') {
     ssl: {
       rejectUnauthorized: false
     },
-    max: 10, // Limit connections in serverless
+    max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000,
   });
 
-  // Handle pool errors to prevent process crashes in serverless
   pool.on('error', (err: any) => {
     console.error('Unexpected error on idle client', err);
   });
 } else {
-  const dbPath = join(process.cwd(), 'braj_accounting.db');
+  // Use /tmp on Vercel to avoid read-only filesystem errors
+  const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+  const dbPath = isVercel 
+    ? join('/tmp', 'braj_accounting.db')
+    : join(process.cwd(), 'braj_accounting.db');
+    
   sqlite = new Database(dbPath);
   sqlite.pragma('journal_mode = WAL');
   console.log(`Using SQLite database at: ${dbPath}`);
@@ -50,10 +56,8 @@ export async function query(text: string, params?: any[]) {
   if (dbType === 'postgres') {
     return pool.query(text, params);
   } else {
-    // Convert Postgres-style $1, $2 to SQLite ?
     const sqliteText = text.replace(/\$(\d+)/g, '?');
     
-    // Convert Postgres-specific syntax if needed
     let processedText = sqliteText
       .replace(/NOW\(\)/gi, "datetime('now')")
       .replace(/TIMESTAMPTZ/gi, "TEXT")
@@ -72,7 +76,6 @@ export async function query(text: string, params?: any[]) {
         const tableMatch = text.match(/INSERT INTO (\w+)/i) || text.match(/UPDATE (\w+)/i);
         if (tableMatch) {
           const tableName = tableMatch[1];
-          // For UPDATE, we might need a different way to find the row, but for now we focus on INSERT
           const lastRow = sqlite.prepare(`SELECT * FROM ${tableName} WHERE rowid = ?`).get(result.lastInsertRowid);
           return { rows: [lastRow] };
         }
@@ -82,28 +85,55 @@ export async function query(text: string, params?: any[]) {
   }
 }
 
+async function seedRoles(client: any) {
+  const roles = [
+    ['Admin', 'Full system access'],
+    ['Manager', 'Complete company management'],
+    ['Accountant', 'Full accounting operations'],
+    ['Data Entry', 'Limited entry access']
+  ];
+
+  for (const [name, desc] of roles) {
+    if (dbType === 'postgres') {
+      await client.query(
+        'INSERT INTO roles (name, description) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING',
+        [name, desc]
+      );
+    } else {
+      try {
+        sqlite.prepare('INSERT OR IGNORE INTO roles (name, description) VALUES (?, ?)').run(name, desc);
+      } catch (err) {}
+    }
+  }
+}
+
 export async function initializeDatabase() {
   const rootDir = process.cwd().endsWith('backend') ? process.cwd() : join(process.cwd(), 'backend');
   const schemaPath = join(rootDir, 'src', 'db', 'schema.sql');
 
+  if (!existsSync(schemaPath)) {
+    console.warn(`Schema file not found at ${schemaPath}, checking alternative...`);
+    const altPath = join(process.cwd(), 'backend', 'src', 'db', 'schema.sql');
+    if (!existsSync(altPath)) throw new Error('Could not locate schema.sql');
+  }
+
+  const schemaSql = readFileSync(schemaPath, 'utf8');
+
   if (dbType === 'postgres') {
     const client = await pool.connect();
     try {
-      const schemaSql = readFileSync(schemaPath, 'utf8');
-      const statements = schemaSql.split(';').filter((stmt: string) => stmt.trim());
-      
-      for (const stmt of statements) {
-        if (stmt.trim()) {
-          await client.query(stmt);
-        }
-      }
+      // Use single query for Postgres initialization - much more robust
+      await client.query(schemaSql);
+      await seedRoles(client);
+      console.log('Postgres database initialized and seeded.');
+    } catch (err: any) {
+      console.error('Postgres initialization failed:', err.message);
+      throw err;
     } finally {
       client.release();
     }
   } else {
-    let schemaSql = readFileSync(schemaPath, 'utf8');
-    
-    schemaSql = schemaSql
+    let sqliteSchema = schemaSql
       .replace(/CREATE EXTENSION IF NOT EXISTS "uuid-ossp";/g, '')
       .replace(/uuid_generate_v4\(\)/g, '(lower(hex(randomblob(16))))')
       .replace(/TIMESTAMPTZ/gi, 'TEXT')
@@ -113,7 +143,7 @@ export async function initializeDatabase() {
       .replace(/SERIAL/gi, 'INTEGER PRIMARY KEY AUTOINCREMENT')
       .replace(/CHECK \((.*?)\)/gi, (match) => match.replace(/\$1/g, '?'));
       
-    const statements = schemaSql
+    const statements = sqliteSchema
       .split(';')
       .map(stmt => stmt.replace(/--.*$/gm, '').trim())
       .filter((stmt: string) => stmt.length > 0);
@@ -123,10 +153,12 @@ export async function initializeDatabase() {
         sqlite.prepare(stmt).run();
       } catch (err: any) {
         if (!err.message.includes('already exists')) {
-          console.error(`SQLite initialization error on stmt: \n${stmt}\nError: ${err.message}`);
+          console.error(`SQLite initialization error: ${err.message}`);
         }
       }
     }
+    await seedRoles(null);
+    console.log('SQLite database initialized and seeded.');
   }
 }
 
