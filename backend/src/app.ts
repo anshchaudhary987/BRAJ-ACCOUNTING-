@@ -15,12 +15,22 @@ app.use(express.json());
 app.use(routes);
 
 // Health check endpoints
-app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'OK', 
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'unknown';
+  try {
+    const { sequelize } = await import('./models');
+    await sequelize.authenticate();
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'error: ' + (err instanceof Error ? err.message : String(err));
+  }
+
+  res.json({
+    status: 'OK',
     environment: process.env.NODE_ENV,
-    vercel: !!process.env.VERCEL,
-    timestamp: new Date().toISOString() 
+    vercel: true,
+    database: dbStatus,
+    timestamp: new Date().toISOString()
   });
 });
 
