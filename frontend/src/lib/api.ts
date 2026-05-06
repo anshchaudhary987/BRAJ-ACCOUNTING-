@@ -3,7 +3,7 @@ import { useCompanyStore } from '@/store/useCompanyStore';
 import { useAuthStore } from '@/store/useAuthStore';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
 });
 
 // Request interceptor to attach company ID and JWT token

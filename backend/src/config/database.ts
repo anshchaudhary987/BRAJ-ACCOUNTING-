@@ -80,10 +80,12 @@ export async function query(text: string, params?: any[]) {
 }
 
 export async function initializeDatabase() {
+  const rootDir = process.cwd().endsWith('backend') ? process.cwd() : join(process.cwd(), 'backend');
+  const schemaPath = join(rootDir, 'src', 'db', 'schema.sql');
+
   if (dbType === 'postgres') {
     const client = await pool.connect();
     try {
-      const schemaPath = join(__dirname, '..', 'db', 'schema.sql');
       const schemaSql = readFileSync(schemaPath, 'utf8');
       const statements = schemaSql.split(';').filter((stmt: string) => stmt.trim());
       
@@ -96,7 +98,6 @@ export async function initializeDatabase() {
       client.release();
     }
   } else {
-    const schemaPath = join(__dirname, '..', 'db', 'schema.sql');
     let schemaSql = readFileSync(schemaPath, 'utf8');
     
     schemaSql = schemaSql

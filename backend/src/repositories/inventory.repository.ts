@@ -119,8 +119,10 @@ export class InventoryRepository {
       const totalAmount = journal.entries.reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
       
       const voucherData = {
+        voucherNumber: `AUTO-SJ-${Date.now()}`, // Temporary formatted number
         voucherType: journal.journalType === 'Receipt' ? 'Journal' : 'Journal',
         date: journal.date,
+        effectiveDate: journal.date,
         narration: `Auto-posted from Stock Journal: ${journal.narration || ''}`,
         totalDebit: totalAmount,
         totalCredit: totalAmount,

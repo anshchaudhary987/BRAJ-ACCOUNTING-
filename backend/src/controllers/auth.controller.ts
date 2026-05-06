@@ -23,9 +23,16 @@ export class AuthController {
 
       const passwordHash = await bcrypt.hash(password, 10);
       const user = await UserRepository.createUserWithPassword(pool, name, email, passwordHash);
+      if (!user) {
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
 
       // Generate token
-      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+      const token = jwt.sign(
+        { userId: user.id, email: user.email }, 
+        JWT_SECRET, 
+        { expiresIn: JWT_EXPIRES_IN as any }
+      );
 
       res.status(201).json({
         user: { id: user.id, name: user.name, email: user.email, isActive: user.isActive },
@@ -55,7 +62,11 @@ export class AuthController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+      const token = jwt.sign(
+        { userId: user.id, email: user.email }, 
+        JWT_SECRET, 
+        { expiresIn: JWT_EXPIRES_IN as any }
+      );
 
       res.json({
         user: { id: user.id, name: user.name, email: user.email, isActive: user.isActive },
