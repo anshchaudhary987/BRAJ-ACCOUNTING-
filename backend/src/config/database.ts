@@ -28,7 +28,10 @@ if (dbType === 'postgres') {
     connectionString: connectionString,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    max: 10, // Limit connections in serverless
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
   // Handle pool errors to prevent process crashes in serverless

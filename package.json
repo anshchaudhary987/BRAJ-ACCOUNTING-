@@ -33,8 +33,16 @@
     "@types/uuid": "^10.0.0",
     "typescript": "^6.0.3"
   },
+  "dependencies": {
+    "@vercel/node": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
   "optionalDependencies": {
-    "@next/swc-linux-x64-gnu": "^16.2.4",
-    "lightningcss-linux-x64-gnu": "^1.32.0"
+    "@next/swc-linux-x64-gnu": "15.1.0",
+    "lightningcss-linux-x64-gnu": "^1.28.2"
   }
 }
