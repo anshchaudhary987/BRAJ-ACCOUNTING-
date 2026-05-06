@@ -15,10 +15,11 @@ app.use(express.json());
 app.use(routes);
 
 // Health check endpoints
+import { sequelize } from './models/index.js';
+
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'unknown';
   try {
-    const { sequelize } = await import('./models');
     await sequelize.authenticate();
     dbStatus = 'connected';
   } catch (err) {
