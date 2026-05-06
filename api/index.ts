@@ -4,6 +4,9 @@ import { initializeDatabase, dbType } from '../backend/src/config/database.js';
 let initialized = false;
 
 export default async function handler(req: any, res: any) {
+  if (req.url === '/api/test') {
+    return res.status(200).json({ status: 'API Handler is Alive' });
+  }
   if (!initialized) {
     try {
       console.log(`Initializing ${dbType} database...`);
