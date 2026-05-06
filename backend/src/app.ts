@@ -14,13 +14,18 @@ app.use(express.json());
 // Main API Routes
 app.use(routes);
 
-// Health check endpoint
+// Health check endpoints
 app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'OK', 
+    environment: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL,
+    timestamp: new Date().toISOString() 
+  });
 });
 
 app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ status: 'OK' });
 });
 
 // 404 handler
